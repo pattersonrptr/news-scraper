@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Daily News Digest</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+    .container { max-width: 640px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .header { background: #0f9d58; color: #fff; padding: 24px 28px; }
+    .header h1 { margin: 0; font-size: 22px; }
+    .header p { margin: 6px 0 0; font-size: 13px; opacity: .85; }
+    .section-title { padding: 16px 28px 8px; font-size: 13px; font-weight: bold; text-transform: uppercase; color: #888; letter-spacing: .05em; border-bottom: 1px solid #eee; }
+    .article { padding: 16px 28px; border-bottom: 1px solid #f0f0f0; }
+    .article h2 { margin: 0 0 6px; font-size: 15px; }
+    .article h2 a { color: #0f9d58; text-decoration: none; }
+    .article .meta { font-size: 12px; color: #aaa; margin-bottom: 6px; }
+    .article p { font-size: 13px; color: #555; margin: 0; line-height: 1.55; }
+    .sentiment-pos { color: #0f9d58; }
+    .sentiment-neg { color: #e53935; }
+    .sentiment-neu { color: #888; }
+    .stats { display: flex; gap: 24px; padding: 16px 28px; background: #f9f9f9; }
+    .stat { text-align: center; }
+    .stat .value { font-size: 22px; font-weight: bold; color: #0f9d58; }
+    .stat .label { font-size: 11px; color: #aaa; }
+    .footer { padding: 16px 28px; font-size: 12px; color: #aaa; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Your Daily Digest</h1>
+      <p>{{ date_label }} &bull; {{ total_articles }} articles collected</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="value">{{ total_articles }}</div>
+        <div class="label">Articles</div>
+      </div>
+      <div class="stat">
+        <div class="value sentiment-pos">{{ sentiment_distribution.get(1, 0) }}</div>
+        <div class="label">Positive</div>
+      </div>
+      <div class="stat">
+        <div class="value sentiment-neg">{{ sentiment_distribution.get(-1, 0) }}</div>
+        <div class="label">Negative</div>
+      </div>
+      <div class="stat">
+        <div class="value">{{ top_categories | length }}</div>
+        <div class="label">Categories</div>
+      </div>
+    </div>
+
+    {% for category, articles in sections.items() %}
+    <div class="section-title">{{ category | title }}</div>
+    {% for article in articles %}
+    <div class="article">
+      <h2><a href="{{ article.url }}">{{ article.title }}</a></h2>
+      <div class="meta">
+        {% if article.published_at %}{{ article.published_at.strftime('%b %d, %Y %H:%M') }} UTC &bull; {% endif %}
+        {% if article.sentiment == 1 %}<span class="sentiment-pos">▲ Positive</span>
+        {% elif article.sentiment == -1 %}<span class="sentiment-neg">▼ Negative</span>
+        {% else %}<span class="sentiment-neu">● Neutral</span>{% endif %}
+      </div>
+      {% if article.summary %}
+      <p>{{ article.summary }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% endfor %}
+
+    <div class="footer">
+      Generated on {{ generated_at }} UTC.
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,164 @@
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: news_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: newsdb
+      POSTGRES_USER: newsuser
+      POSTGRES_PASSWORD: newspass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U newsuser -d newsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis (broker + cache)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: news_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Backend API (FastAPI)
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      target: development
+    container_name: news_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://newsuser:newspass@db:5432/newsdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      # Ollama runs on host machine — accessible via host.docker.internal
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Linux compatibility
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker
+  # ---------------------------------------------------------------------------
+  celery_worker:
+    build:
+      context: .
+      target: development
+    container_name: news_celery_worker
+    restart: unless-stopped
+    command: celery -A backend.src.infrastructure.messaging.celery_app worker --loglevel=info --concurrency=4
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://newsuser:newspass@db:5432/newsdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat (scheduler)
+  # ---------------------------------------------------------------------------
+  celery_beat:
+    build:
+      context: .
+      target: development
+    container_name: news_celery_beat
+    restart: unless-stopped
+    command: celery -A backend.src.infrastructure.messaging.celery_app beat --loglevel=info --scheduler celery.beat.PersistentScheduler
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://newsuser:newspass@db:5432/newsdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    volumes:
+      - .:/app
+      - celerybeat_data:/var/run/celerybeat
+    depends_on:
+      - redis
+
+  # ---------------------------------------------------------------------------
+  # Flower (Celery monitoring UI)
+  # ---------------------------------------------------------------------------
+  flower:
+    build:
+      context: .
+      target: development
+    container_name: news_flower
+    restart: unless-stopped
+    command: celery -A backend.src.infrastructure.messaging.celery_app flower --port=5555
+    env_file: .env
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
+  # ---------------------------------------------------------------------------
+  # Frontend (Next.js)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: news_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Server-side (SSR/rewrites): container-to-container via Docker network
+      BACKEND_URL: http://backend:8000
+      # Client-side (browser): via host port
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  postgres_data:
+  redis_data:
+  celerybeat_data:

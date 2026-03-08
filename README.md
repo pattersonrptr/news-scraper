@@ -47,11 +47,10 @@ news-scraper/
 
 ## Prerequisites
 
-- Python 3.12+
-- Poetry (`pip install poetry`)
 - Docker & docker-compose
-- Node.js 20+ (for frontend)
-- Ollama (optional, for local AI) — see `.github/copilot/ollama-setup.md`
+- Ollama (for local AI) — see `.github/copilot/ollama-setup.md`
+- Python 3.12+ and Poetry (only for local development without Docker)
+- Node.js 20+ (only for local frontend development without Docker)
 
 ---
 
@@ -64,22 +63,35 @@ cd news-scraper
 
 # 2. Copy and configure environment
 cp .env.example .env
-# Edit .env with your values (GEMINI_API_KEY, SMTP settings, etc.)
+# Edit .env: set APP_SECRET_KEY, JWT_SECRET_KEY (and GEMINI_API_KEY if using Gemini)
 
-# 3. Start all services
-docker-compose up -d
+# 3. Install and start Ollama (Linux)
+curl -fsSL https://ollama.com/install.sh | sh
+# Allow connections from Docker containers:
+sudo mkdir -p /etc/systemd/system/ollama.service.d
+printf '[Service]\nEnvironment="OLLAMA_HOST=0.0.0.0"\n' | sudo tee /etc/systemd/system/ollama.service.d/override.conf
+sudo systemctl daemon-reload && sudo systemctl restart ollama
+# Pull the model (requires ~5 GB RAM; see ollama-setup.md for lighter options)
+ollama pull llama3.1:8b
 
-# 4. Run initial migrations
-docker-compose exec backend alembic upgrade head
+# 4. Start all 8 services (migrations + seed run automatically)
+docker compose up -d
 
-# 5. Load default sources
-docker-compose exec backend python -m src.interfaces.cli.seed_sources
+# 5. Access the app
+# Frontend:              http://localhost:3000
+# API docs (Swagger):    http://localhost:8000/docs
+# Flower (task monitor): http://localhost:5555
 
-# 6. Access the app
-# API docs:   http://localhost:8000/docs
-# Frontend:   http://localhost:3000
-# Flower (Celery monitor): http://localhost:5555
+# 6. Create your account at http://localhost:3000/register
+#    or use the test account: admin@news.com / admin123
+
+# 7. (Optional) Trigger AI pipeline immediately instead of waiting for the hourly schedule
+docker compose exec celery_worker celery -A backend.src.infrastructure.messaging.celery_app \
+  call backend.src.infrastructure.messaging.tasks.run_ai_pipeline.run_ai_pipeline_task \
+  --kwargs='{"batch_size": 50}'
 ```
+
+> **Port mapping:** PostgreSQL is exposed on `5434` (not 5432) and Redis on `6380` (not 6379) to avoid conflicts with local installs.
 
 ---
 
@@ -90,26 +102,29 @@ docker-compose exec backend python -m src.interfaces.cli.seed_sources
 ```bash
 cd backend
 
-# Install dependencies (creates .venv automatically)
+# Install dependencies
 poetry install
 
 # Activate virtual environment
 poetry shell
 
-# Copy env file
+# Copy env file and adjust URLs to localhost
 cp ../.env.example ../.env
 
 # Run migrations
 alembic upgrade head
 
+# Seed default sources
+python -m backend.src.interfaces.cli.seed_sources
+
 # Start API server
-uvicorn src.interfaces.api.main:app --reload
+uvicorn backend.src.interfaces.api.main:app --reload
 
 # Start Celery worker (separate terminal)
-celery -A src.infrastructure.messaging.celery_app worker --loglevel=info
+celery -A backend.src.infrastructure.messaging.celery_app worker --loglevel=info
 
 # Start Celery Beat scheduler (separate terminal)
-celery -A src.infrastructure.messaging.celery_app beat --loglevel=info
+celery -A backend.src.infrastructure.messaging.celery_app beat --loglevel=info
 ```
 
 ### Frontend
@@ -176,17 +191,21 @@ See `.env.example` for all required variables. Key ones:
 
 | Variable | Description | Default |
 |---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | `sqlite:///./news.db` |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
-| `AI_PROVIDER` | `gemini` or `ollama` | `gemini` |
-| `GEMINI_API_KEY` | Google Gemini API key | — |
-| `OLLAMA_BASE_URL` | Ollama API URL | `http://localhost:11434` |
-| `SMTP_HOST` | Email SMTP host | — |
+| `APP_SECRET_KEY` | Application secret (generate with `openssl rand -hex 32`) | — |
+| `JWT_SECRET_KEY` | JWT signing secret (generate with `openssl rand -hex 32`) | — |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://newsuser:newspass@db:5432/newsdb` |
+| `REDIS_URL` | Redis connection string | `redis://redis:6379/0` |
+| `AI_PROVIDER` | `gemini` or `ollama` | `ollama` |
+| `GEMINI_API_KEY` | Google Gemini API key (only if `AI_PROVIDER=gemini`) | — |
+| `OLLAMA_BASE_URL` | Ollama API URL (Docker: use `host.docker.internal`) | `http://host.docker.internal:11434` |
+| `OLLAMA_MODEL` | Ollama model to use | `llama3.1:8b` |
+| `OLLAMA_FALLBACK` | Fall back to Ollama when Gemini hits rate limit | `true` |
+| `SMTP_HOST` | Email SMTP host (leave blank to disable alerts) | — |
 | `SMTP_PORT` | Email SMTP port | `587` |
 | `SMTP_USER` | Email username | — |
 | `SMTP_PASSWORD` | Email password | — |
 | `ALERT_EMAIL` | Recipient email for alerts | — |
-| `DEFAULT_FETCH_INTERVAL` | Default feed fetch interval (min) | `60` |
+| `DEFAULT_FETCH_INTERVAL` | Feed fetch interval in minutes | `60` |
 
 ---
 

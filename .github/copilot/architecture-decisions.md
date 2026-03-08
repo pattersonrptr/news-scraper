@@ -106,7 +106,62 @@ Paid providers (OpenAI GPT-4o, Anthropic Claude) can be added as new adapters wi
 
 ---
 
-# ADR-006: Commit Convention — Conventional Commits
+# ADR-008: Docker Stack — 8 Services with Auto-migration
+
+**Date:** 2026-03-08
+**Status:** Accepted
+
+## Context
+
+Running `docker compose up` should work from a cold start with zero manual steps.
+
+## Decision
+
+The Docker stack runs 8 services:
+
+| Service | Image | External Port |
+|---|---|---|
+| `db` | postgres:16-alpine | 5434 (avoids conflict with local PostgreSQL) |
+| `redis` | redis:7-alpine | 6380 (avoids conflict with local Redis) |
+| `backend` | project Dockerfile | 8000 |
+| `celery_worker` | project Dockerfile | — |
+| `celery_beat` | project Dockerfile | — |
+| `flower` | project Dockerfile | 5555 |
+| `frontend` | frontend Dockerfile | 3000 |
+
+`entrypoint.sh` runs `alembic upgrade head` and `python -m backend.src.interfaces.cli.seed_sources` automatically before starting `uvicorn`, so no manual migration or seed step is needed.
+
+All backend services use `extra_hosts: ["host.docker.internal:host-gateway"]` for Linux compatibility (Docker Desktop sets this automatically on macOS/Windows).
+
+## Key fixes applied during Docker bringup
+
+- `render_as_batch=False` in `alembic/env.py` (was `True` — SQLite-only setting, breaks PostgreSQL).
+- `get_session()` dependency now commits on success and rolls back on exception (was missing `commit`).
+- `BACKEND_URL=http://backend:8000` injected in the frontend service for Next.js SSR rewrites.
+- `OLLAMA_BASE_URL=http://host.docker.internal:11434` in backend/worker services.
+
+---
+
+# ADR-009: Authentication — JWT HS256 + Refresh Tokens
+
+**Date:** 2026-03-08
+**Status:** Accepted
+
+## Decision
+
+- **Access token**: HS256 JWT, 30-minute expiry, signed with `JWT_SECRET_KEY`.
+- **Refresh token**: HS256 JWT, 7-day expiry, stored client-side in localStorage.
+- **FastAPI dependency**: `get_current_user` decodes `Authorization: Bearer <token>` header; raises 401 on invalid/expired tokens.
+- **Password hashing**: bcrypt via `passlib[bcrypt]` (pinned to `bcrypt==4.0.1` for compatibility).
+- **Endpoints**: `POST /auth/register`, `POST /auth/login` (OAuth2 form), `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me`.
+- **Frontend**: Zustand `authStore` persisted in `localStorage`; all API calls attach `Authorization` header automatically.
+
+## Rationale
+
+- Stateless tokens avoid session store; Redis is used only for Celery, not session management.
+- Refresh tokens allow long-lived sessions without issuing long-lived access tokens.
+- `user_id` was already on all DB tables from Phase 1, so adding auth required zero schema changes.
+
 
 **Date:** 2026-03-07
 **Status:** Accepted
