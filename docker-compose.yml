@@ -147,6 +147,9 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Server-side (SSR/rewrites): container-to-container via Docker network
+      BACKEND_URL: http://backend:8000
+      # Client-side (browser): via host port
       NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
     depends_on:
       - backend
