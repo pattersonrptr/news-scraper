@@ -35,9 +35,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Yield a request-scoped async SQLAlchemy session."""
+    """Yield a request-scoped async SQLAlchemy session.
+
+    Commits on clean exit, rolls back on exception.
+    """
     async with AsyncSessionFactory() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 async def get_article_repo(

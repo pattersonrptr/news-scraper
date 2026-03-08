@@ -25,6 +25,7 @@ aiosqlite = "^0.20.0"      # SQLite async driver (local dev)
 # Task queue
 celery = {extras = ["redis"], version = "^5.4.0"}
 redis = {extras = ["hiredis"], version = "^5.0.0"}
+flower = "^2.0.0"
 
 # Feed collection
 feedparser = "^6.0.11"

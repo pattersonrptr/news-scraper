@@ -53,7 +53,7 @@ def do_run_migrations(connection) -> None:  # type: ignore[no-untyped-def]
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
-        render_as_batch=True,
+        render_as_batch=False,  # PostgreSQL supports ALTER TABLE natively
     )
     with context.begin_transaction():
         context.run_migrations()
