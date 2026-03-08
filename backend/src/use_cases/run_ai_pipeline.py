@@ -36,8 +36,20 @@ class RunAIPipelineUseCase:
     # Public API
     # ------------------------------------------------------------------
 
-    async def execute(self, batch_size: int = 20) -> dict[str, int]:
+    async def execute(
+        self,
+        batch_size: int = 20,
+        commit_fn: object = None,
+    ) -> dict[str, int]:
         """Analyse up to *batch_size* unprocessed articles.
+
+        Parameters
+        ----------
+        batch_size:
+            Maximum number of articles to process per run.
+        commit_fn:
+            Optional async callable invoked after each article is persisted.
+            Use this to commit per-article instead of once at the end.
 
         Returns
         -------
@@ -109,6 +121,8 @@ class RunAIPipelineUseCase:
                 is_processed=True,
             )
             await self._repo.update(updated)
+            if commit_fn is not None:
+                await commit_fn()  # type: ignore[misc]
             processed += 1
 
         logger.info(

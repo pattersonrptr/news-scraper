@@ -41,14 +41,34 @@ def run_ai_pipeline_task(self, batch_size: int = 20) -> dict[str, Any]:  # type:
 
 async def _run_pipeline(batch_size: int) -> dict[str, Any]:
     """Wire dependencies and execute RunAIPipelineUseCase."""
+    from contextlib import asynccontextmanager
+
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
     from backend.src.core.config.settings import AIProvider, get_settings
-    from backend.src.infrastructure.database.engine import get_session
     from backend.src.infrastructure.database.repositories.article_repo import (
         SQLArticleRepository,
     )
     from backend.src.use_cases.run_ai_pipeline import RunAIPipelineUseCase
 
     settings = get_settings()
+
+    # Create a fresh engine per task invocation to avoid "Future attached to a
+    # different loop" errors when Celery runs asyncio.run() across multiple tasks.
+    fresh_engine = create_async_engine(
+        settings.database_url,
+        echo=False,
+        pool_pre_ping=True,
+        pool_size=2,
+        max_overflow=0,
+    )
+    session_factory = async_sessionmaker(
+        bind=fresh_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=False,
+        autocommit=False,
+    )
 
     if settings.ai_provider == AIProvider.GEMINI:
         from backend.src.infrastructure.ai.gemini.adapter import GeminiAdapter
@@ -57,10 +77,22 @@ async def _run_pipeline(batch_size: int) -> dict[str, Any]:
         from backend.src.infrastructure.ai.ollama.adapter import OllamaAdapter
         provider = OllamaAdapter()
 
-    async with get_session() as session:
-        repo = SQLArticleRepository(session)
-        use_case = RunAIPipelineUseCase(
-            article_repo=repo,
-            primary_provider=provider,
-        )
-        return await use_case.execute(batch_size=batch_size)
+    try:
+        async with session_factory() as session:
+            try:
+                repo = SQLArticleRepository(session)
+                use_case = RunAIPipelineUseCase(
+                    article_repo=repo,
+                    primary_provider=provider,
+                )
+                # commit after each article so progress is visible immediately
+                result = await use_case.execute(
+                    batch_size=batch_size,
+                    commit_fn=session.commit,
+                )
+                return result
+            except Exception:
+                await session.rollback()
+                raise
+    finally:
+        await fresh_engine.dispose()
