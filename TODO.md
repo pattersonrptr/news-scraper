@@ -7,40 +7,40 @@
 
 ## Phase 1 — Foundation & RSS Collector (MVP Core)
 
-- [ ] Initialize Poetry project (`pyproject.toml`)
-- [ ] Configure `ruff`, `mypy`, `pytest`, `pre-commit`
-- [ ] Set up GitHub Actions CI (lint + test)
-- [ ] Scaffold Clean Architecture directory structure with `__init__.py` stubs
-- [ ] Define domain entities: `Article`, `Source`, `UserProfile`, `Alert`
-- [ ] Define repository interfaces (ports): `ArticleRepository`, `SourceRepository`, `UserProfileRepository`
-- [ ] Implement `core/config` (pydantic-settings, `.env` loading)
-- [ ] Implement `core/logging` (structured JSON logging)
-- [ ] Implement `core/exceptions` (custom exception hierarchy)
-- [ ] Implement SQLAlchemy models for `articles`, `sources`, `user_profiles`
-- [ ] Set up Alembic with initial migration
-- [ ] Implement `CompressedText` SQLAlchemy `TypeDecorator` (zlib body storage)
-- [ ] Implement `RSSCollector` adapter (feedparser + httpx)
-- [ ] Implement deduplication service (URL hash + content hash)
-- [ ] Implement `CollectFeedsUseCase`
+- [x] Initialize Poetry project (`pyproject.toml`)
+- [x] Configure `ruff`, `mypy`, `pytest`, `pre-commit`
+- [x] Set up GitHub Actions CI (lint + test)
+- [x] Scaffold Clean Architecture directory structure with `__init__.py` stubs
+- [x] Define domain entities: `Article`, `Source`, `UserProfile`, `Alert`
+- [x] Define repository interfaces (ports): `ArticleRepository`, `SourceRepository`, `UserProfileRepository`
+- [x] Implement `core/config` (pydantic-settings, `.env` loading)
+- [x] Implement `core/logging` (structured JSON logging)
+- [x] Implement `core/exceptions` (custom exception hierarchy)
+- [x] Implement SQLAlchemy models for `articles`, `sources`, `user_profiles`
+- [x] Set up Alembic with initial migration
+- [x] Implement `CompressedText` SQLAlchemy `TypeDecorator` (zlib body storage)
+- [x] Implement `RSSCollector` adapter (feedparser + httpx)
+- [x] Implement deduplication service (URL hash + content hash)
+- [x] Implement `CollectFeedsUseCase`
 - [ ] Add 5 initial default sources (see `docs/SPEC.md` §7)
-- [ ] Write unit tests for deduplication service
+- [x] Write unit tests for deduplication service
 - [ ] Write integration test for RSS collector (mock HTTP)
-- [ ] Write Dockerfile for backend
-- [ ] Write `docker-compose.yml` (backend + PostgreSQL + Redis)
+- [x] Write Dockerfile for backend
+- [x] Write `docker-compose.yml` (backend + PostgreSQL + Redis)
 - [ ] Confirm RSS collection works end-to-end in Docker
 
 ---
 
 ## Phase 2 — REST API
 
-- [ ] Bootstrap FastAPI app with versioned router (`/api/v1`)
+- [x] Bootstrap FastAPI app with versioned router (`/api/v1`)
 - [ ] Implement Pydantic v2 schemas for all API models
 - [ ] Implement `GET /articles` with filters (source, category, date, sentiment)
 - [ ] Implement `GET /articles/{id}`
 - [ ] Implement `PATCH /articles/{id}/read`
 - [ ] Implement CRUD for `/sources`
 - [ ] Implement `GET /profile` and `PUT /profile/interests`
-- [ ] Implement `GET /health`
+- [x] Implement `GET /health`
 - [ ] Add pagination to list endpoints
 - [ ] Write API integration tests (pytest + httpx AsyncClient)
 - [ ] Verify Swagger/ReDoc docs auto-generated correctly
@@ -49,11 +49,11 @@
 
 ## Phase 3 — Celery Task Queue & Scheduler
 
-- [ ] Configure Celery with Redis broker + result backend
-- [ ] Configure Celery Beat for periodic tasks
-- [ ] Implement `collect_feeds` Celery task (per-source interval)
+- [x] Configure Celery with Redis broker + result backend
+- [x] Configure Celery Beat for periodic tasks
+- [x] Implement `collect_feeds` Celery task (per-source interval)
 - [ ] Implement `compute_trends` task (hourly)
-- [ ] Add Celery worker and Beat containers to docker-compose
+- [x] Add Celery worker and Beat containers to docker-compose
 - [ ] Write task integration tests
 
 ---
@@ -65,11 +65,11 @@
 - [ ] Implement `OllamaAdapter` (local, no cost)
 - [ ] Implement `GeminiAdapter` (Google free tier)
 - [ ] Implement AI pipeline use case: summarize, sentiment, classify, extract entities
-- [ ] Implement relevance scoring (explicit interests + implicit weights)
+- [x] Implement relevance scoring (explicit interests + implicit weights)
 - [ ] Implement `run_ai_pipeline` Celery batch task (runs hourly, batch of 20)
-- [ ] Expose `AI_PROVIDER` env var to switch between providers
+- [x] Expose `AI_PROVIDER` env var to switch between providers
 - [ ] Add Gemini → Ollama automatic fallback on rate limit
-- [ ] Write unit tests for relevance scoring
+- [x] Write unit tests for relevance scoring
 - [ ] Write integration tests for AI adapters (mock responses)
 
 ---

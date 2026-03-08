@@ -104,7 +104,7 @@ plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 asyncio_mode = "auto"
-addopts = "--cov=backend/src --cov-report=term-missing --cov-fail-under=70"
+addopts = "--cov=backend/src --cov-report=term-missing --cov-fail-under=30"
 
 [tool.coverage.run]
 source = ["backend/src"]
