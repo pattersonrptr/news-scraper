@@ -40,7 +40,9 @@ export const ArticleSchema = z.object({
 
 export const ArticleListSchema = z.object({
   items: z.array(ArticleSchema),
-  meta: PaginatedMeta,
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
 });
 
 export type Article = z.infer<typeof ArticleSchema>;

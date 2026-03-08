@@ -16,17 +16,21 @@ const SENTIMENTS = [
 ];
 
 export default function FeedPage() {
-  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+  const [offset, setOffset] = useState(0);
   const [category, setCategory] = useState("");
   const [sentiment, setSentiment] = useState("");
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   const { data, isLoading, isError } = useArticles({
-    page,
-    page_size: 20,
+    limit: PAGE_SIZE,
+    offset,
     category: category || undefined,
     sentiment: sentiment !== "" ? Number(sentiment) : undefined,
   });
+
+  const page = Math.floor(offset / PAGE_SIZE) + 1;
+  const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 1;
 
   return (
     <div className="space-y-4">
@@ -36,12 +40,12 @@ export default function FeedPage() {
           <Input
             placeholder="Filter by category…"
             value={category}
-            onChange={(e) => { setCategory(e.target.value); setPage(1); }}
+            onChange={(e) => { setCategory(e.target.value); setOffset(0); }}
             className="w-40"
           />
           <select
             value={sentiment}
-            onChange={(e) => { setSentiment(e.target.value); setPage(1); }}
+            onChange={(e) => { setSentiment(e.target.value); setOffset(0); }}
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
           >
             {SENTIMENTS.map((s) => (
@@ -64,24 +68,24 @@ export default function FeedPage() {
         ))}
       </div>
 
-      {data && data.meta.pages > 1 && (
+      {data && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
+            disabled={offset === 0}
+            onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
           >
             Previous
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {data.meta.page} / {data.meta.pages}
+            Page {page} / {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
-            disabled={page >= data.meta.pages}
-            onClick={() => setPage((p) => p + 1)}
+            disabled={page >= totalPages}
+            onClick={() => setOffset((o) => o + PAGE_SIZE)}
           >
             Next
           </Button>

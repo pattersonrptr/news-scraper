@@ -67,13 +67,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 // ---------------------------------------------------------------------------
 
 export type ArticleFilters = {
-  page?: number;
-  page_size?: number;
+  limit?: number;
+  offset?: number;
   source_id?: string;
   category?: string;
   sentiment?: number;
-  from_date?: string;
-  to_date?: string;
 };
 
 export const articlesApi = {
