@@ -96,19 +96,19 @@
 
 ## Phase 6 — Frontend (Next.js 15 + TypeScript + Tailwind + shadcn/ui)
 
-- [ ] Initialize Next.js 15 project (TypeScript, App Router)
-- [ ] Configure Tailwind CSS v4
-- [ ] Install and configure shadcn/ui
-- [ ] Install Zustand, TanStack Query v5, React Hook Form, Zod, Recharts, Lucide
-- [ ] Add frontend service to docker-compose
-- [ ] Implement layout (sidebar + topbar + main content)
-- [ ] Build article feed page (list + filters + pagination)
-- [ ] Build article detail modal/page
-- [ ] Build sources management page
-- [ ] Build user profile + interests settings page
-- [ ] Build alerts management page
-- [ ] Build trends dashboard (charts)
-- [ ] Ensure fully responsive (mobile + tablet + desktop)
+- [x] Initialize Next.js 15 project (TypeScript, App Router)
+- [x] Configure Tailwind CSS v4
+- [x] Install and configure shadcn/ui
+- [x] Install Zustand, TanStack Query v5, React Hook Form, Zod, Recharts, Lucide
+- [x] Add frontend service to docker-compose
+- [x] Implement layout (sidebar + topbar + main content)
+- [x] Build article feed page (list + filters + pagination)
+- [x] Build article detail modal/page
+- [x] Build sources management page
+- [x] Build user profile + interests settings page
+- [x] Build alerts management page
+- [x] Build trends dashboard (charts)
+- [x] Ensure fully responsive (mobile + tablet + desktop)
 
 ---
 
