@@ -38,6 +38,10 @@ domain → use_cases → interfaces (FastAPI/CLI/Celery)
 - **SHA-256 hashing** for deduplication (URL hash + content hash), NOT for encryption.
 - All timestamps stored as **UTC** in the database.
 - `user_id UUID` present in all tables from day 1 (nullable in MVP, enforced in Phase 7 multi-user).
+- **JWT Auth (Phase 7)**: HS256 access tokens (30 min) + refresh tokens (7 days). `get_current_user` FastAPI dependency decodes Bearer token. All user-scoped endpoints require authentication.
+- **Docker stack**: 8 services — `db` (PostgreSQL, port 5434), `redis` (port 6380), `backend`, `celery_worker`, `celery_beat`, `flower` (port 5555), `frontend` (port 3000). Migrations and seed run automatically via `entrypoint.sh`.
+- **Ollama in Docker**: Ollama runs on the host machine. Containers reach it via `host.docker.internal:11434`. Requires `OLLAMA_HOST=0.0.0.0` in the systemd service override (`/etc/systemd/system/ollama.service.d/override.conf`) so it listens on all interfaces, not just `127.0.0.1`.
+- **AI pipeline per-article commit**: `RunAIPipelineUseCase.execute()` accepts an optional `commit_fn` so the Celery task can commit after each article, making progress visible in real time.
 
 ## Code Style
 

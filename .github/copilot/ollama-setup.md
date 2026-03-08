@@ -67,7 +67,7 @@ curl http://localhost:11434/api/generate -d '{
 
 ## 5. Configure in This Project
 
-In your `.env` file:
+In your `.env` file (local dev, without Docker):
 
 ```env
 AI_PROVIDER=ollama
@@ -87,15 +87,31 @@ OLLAMA_MODEL=llama3.1:8b
 
 ---
 
-## 6. Ollama in Docker
+## 6. Ollama in Docker ⚠️ Required extra step
 
-If running the full stack via docker-compose, Ollama runs on the **host machine** (not in Docker), and the backend container accesses it via `host.docker.internal`:
+If running the full stack via `docker compose`, Ollama runs on the **host machine** (not in a container), and the backend/worker containers access it via `host.docker.internal`.
 
-```env
-OLLAMA_BASE_URL=http://host.docker.internal:11434
+**By default, Ollama only listens on `127.0.0.1`** — Docker containers cannot reach it. You must configure it to listen on all interfaces:
+
+```bash
+# Create the systemd override
+sudo mkdir -p /etc/systemd/system/ollama.service.d
+printf '[Service]\nEnvironment="OLLAMA_HOST=0.0.0.0"\n' | \
+  sudo tee /etc/systemd/system/ollama.service.d/override.conf
+
+# Reload and restart
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
 ```
 
-This is already the default in `docker-compose.yml` for local development.
+Verify the containers can reach it:
+
+```bash
+docker compose exec celery_worker curl -s http://host.docker.internal:11434/api/tags
+# Should return JSON with your model list
+```
+
+The `docker-compose.yml` already sets `OLLAMA_BASE_URL=http://host.docker.internal:11434` and `extra_hosts: ["host.docker.internal:host-gateway"]` (required on Linux — Docker Desktop sets this automatically on macOS/Windows).
 
 ---
 
