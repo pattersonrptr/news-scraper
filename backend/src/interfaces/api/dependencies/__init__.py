@@ -18,6 +18,9 @@ from backend.src.infrastructure.database.repositories.article_repo import (
 from backend.src.infrastructure.database.repositories.source_repo import (
     SQLSourceRepository,
 )
+from backend.src.infrastructure.database.repositories.alert_repo import (
+    SQLAlertRepository,
+)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -38,3 +41,10 @@ async def get_source_repo(
 ) -> SQLSourceRepository:
     """Inject a SQLSourceRepository into a route handler."""
     return SQLSourceRepository(session)
+
+
+async def get_alert_repo(
+    session: AsyncSession = Depends(get_session),
+) -> SQLAlertRepository:
+    """Inject a SQLAlertRepository into a route handler."""
+    return SQLAlertRepository(session)

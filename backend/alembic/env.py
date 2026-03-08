@@ -9,13 +9,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 # Import all models so Alembic can detect schema changes (autogenerate)
+from backend.src.infrastructure.database.models.alert import Base as AlertBase      # noqa: F401
 from backend.src.infrastructure.database.models.article import Base as ArticleBase  # noqa: F401
 from backend.src.infrastructure.database.models.source import Base as SourceBase    # noqa: F401
 
-# Use a unified metadata that includes both bases' tables
+# Use a unified metadata that includes all bases' tables
 import sqlalchemy as sa
 target_metadata = sa.MetaData()
-for base in (ArticleBase, SourceBase):
+for base in (AlertBase, ArticleBase, SourceBase):
     for table in base.metadata.tables.values():
         table.tometadata(target_metadata)
 

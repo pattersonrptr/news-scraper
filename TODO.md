@@ -78,16 +78,19 @@
 
 ## Phase 5 — Alerts & Digest
 
-- [ ] Implement `AlertService` (keyword matching on new articles)
-- [ ] Implement SMTP email adapter
-- [ ] Implement `send_alerts` Celery task (every 15min, rate-limited 1/keyword/hour)
-- [ ] Implement daily digest compilation use case
-- [ ] Implement HTML email template for digest
-- [ ] Implement `send_daily_digest` Celery task
-- [ ] Implement `update_implicit_weights` daily task
-- [ ] Implement Alert CRUD API (`/alerts`)
-- [ ] Implement `GET /trends` and `GET /digest/preview`
-- [ ] Write tests for alert service
+- [x] Implement `AlertService` (keyword matching on new articles)
+- [x] Implement SMTP email adapter (`aiosmtplib` + Jinja2 HTML templates)
+- [x] Implement `send_alerts` Celery task (every 15 min, rate-limited 1/keyword/hour via DB)
+- [x] Implement daily digest compilation use case (`CompileDigestUseCase`)
+- [x] Implement HTML email template for digest (`digest_email.html`)
+- [x] Implement `send_daily_digest` Celery task
+- [x] Implement `update_implicit_weights` daily task (decay × 0.995 + category increment)
+- [x] Implement Alert CRUD API (`GET /alerts`, `POST /alerts`, `DELETE /alerts/{id}`)
+- [x] Implement `GET /trends` and `GET /digest/preview` endpoints
+- [x] Write unit tests for `AlertService`, `SendAlertsUseCase`, `CompileDigestUseCase`, `UpdateImplicitWeightsUseCase` (24 tests)
+- [x] Write API integration tests for Phase 5 endpoints (10 tests)
+- [x] Add `alerts` table migration (Alembic — `baf6ee849f28`)
+- [x] `AlertModel` uses dialect-agnostic `Uuid` type (SQLite + PostgreSQL compatible)
 
 ---
 

@@ -8,6 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from backend.src.infrastructure.database.models.article import Base as ArticleBase
+from backend.src.infrastructure.database.models.alert import Base as AlertBase
 from backend.src.infrastructure.database.models.source import Base as SourceBase
 from backend.src.infrastructure.database.repositories.article_repo import (
     SQLArticleRepository,
@@ -15,7 +16,10 @@ from backend.src.infrastructure.database.repositories.article_repo import (
 from backend.src.infrastructure.database.repositories.source_repo import (
     SQLSourceRepository,
 )
-from backend.src.interfaces.api.dependencies import get_article_repo, get_session, get_source_repo
+from backend.src.infrastructure.database.repositories.alert_repo import (
+    SQLAlertRepository,
+)
+from backend.src.interfaces.api.dependencies import get_article_repo, get_session, get_source_repo, get_alert_repo
 from backend.src.interfaces.api.main import app
 
 # ---------------------------------------------------------------------------
@@ -41,6 +45,7 @@ async def db_engine():
     """Create a fresh in-memory SQLite engine for each test."""
     engine = create_async_engine(_TEST_DB_URL, echo=False)
     async with engine.begin() as conn:
+        await conn.run_sync(AlertBase.metadata.create_all)
         await conn.run_sync(ArticleBase.metadata.create_all)
         await conn.run_sync(SourceBase.metadata.create_all)
     yield engine
@@ -68,9 +73,13 @@ async def api_client(db_session: AsyncSession):
     async def _override_source_repo():
         return SQLSourceRepository(db_session)
 
+    async def _override_alert_repo():
+        return SQLAlertRepository(db_session)
+
     app.dependency_overrides[get_session] = _override_session
     app.dependency_overrides[get_article_repo] = _override_article_repo
     app.dependency_overrides[get_source_repo] = _override_source_repo
+    app.dependency_overrides[get_alert_repo] = _override_alert_repo
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"

@@ -1,5 +1,9 @@
 """API schemas package."""
 
+from backend.src.interfaces.api.schemas.alert import (
+    AlertCreateRequest,
+    AlertResponse,
+)
 from backend.src.interfaces.api.schemas.article import (
     ArticleResponse,
     ArticleSummaryResponse,
@@ -16,6 +20,8 @@ from backend.src.interfaces.api.schemas.source import (
 )
 
 __all__ = [
+    "AlertCreateRequest",
+    "AlertResponse",
     "ArticleResponse",
     "ArticleSummaryResponse",
     "PaginatedResponse",

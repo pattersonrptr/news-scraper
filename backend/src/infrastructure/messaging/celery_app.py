@@ -16,6 +16,9 @@ celery_app = Celery(
         "backend.src.infrastructure.messaging.tasks.collect_feeds",
         "backend.src.infrastructure.messaging.tasks.compute_trends",
         "backend.src.infrastructure.messaging.tasks.run_ai_pipeline",
+        "backend.src.infrastructure.messaging.tasks.send_alerts",
+        "backend.src.infrastructure.messaging.tasks.send_daily_digest",
+        "backend.src.infrastructure.messaging.tasks.update_implicit_weights",
     ],
 )
 
@@ -43,6 +46,18 @@ celery_app.conf.update(
             "task": "backend.src.infrastructure.messaging.tasks.run_ai_pipeline.run_ai_pipeline_task",
             "schedule": 3600,  # every hour
             "kwargs": {"batch_size": 20},
+        },
+        "send-alerts-every-15min": {
+            "task": "backend.src.infrastructure.messaging.tasks.send_alerts.send_alerts_task",
+            "schedule": 900,  # every 15 minutes
+        },
+        "send-daily-digest": {
+            "task": "backend.src.infrastructure.messaging.tasks.send_daily_digest.send_daily_digest_task",
+            "schedule": 86400,  # every 24 hours (Beat crontab not needed — daily is fine)
+        },
+        "update-implicit-weights-daily": {
+            "task": "backend.src.infrastructure.messaging.tasks.update_implicit_weights.update_implicit_weights_task",
+            "schedule": 86400,  # every 24 hours
         },
     },
 )

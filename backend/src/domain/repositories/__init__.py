@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 import uuid
+from datetime import datetime
 
-from backend.src.domain.entities import Article, Source, UserProfile
+from backend.src.domain.entities import Alert, Article, Source, UserProfile
 
 
 @runtime_checkable
@@ -110,4 +111,32 @@ class UserProfileRepository(Protocol):
     async def update_implicit_weights(
         self, user_id: uuid.UUID, weights: dict[str, float]
     ) -> None:
+        ...
+
+
+@runtime_checkable
+class AlertRepository(Protocol):
+    """Port: persistence operations for Alert (triggered notification log)."""
+
+    async def save(self, alert: Alert) -> Alert:
+        """Persist a triggered alert log entry."""
+        ...
+
+    async def get_by_id(self, alert_id: uuid.UUID) -> Alert | None:
+        ...
+
+    async def list_by_user(self, user_id: uuid.UUID, limit: int = 100) -> list[Alert]:
+        """Return recent alerts for a user, newest first."""
+        ...
+
+    async def list_recent_by_keyword(
+        self,
+        keyword: str,
+        user_id: uuid.UUID | None,
+        since: datetime,
+    ) -> list[Alert]:
+        """Return alerts fired for a keyword since a given datetime (rate-limit check)."""
+        ...
+
+    async def delete(self, alert_id: uuid.UUID) -> None:
         ...

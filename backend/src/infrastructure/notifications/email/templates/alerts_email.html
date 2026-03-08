@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News Alert: {{ keyword }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+    .container { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .header { background: #1a73e8; color: #fff; padding: 20px 28px; }
+    .header h1 { margin: 0; font-size: 20px; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+    .article { padding: 20px 28px; border-bottom: 1px solid #eee; }
+    .article:last-child { border-bottom: none; }
+    .article h2 { margin: 0 0 8px; font-size: 16px; }
+    .article h2 a { color: #1a73e8; text-decoration: none; }
+    .article .meta { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .article p { font-size: 14px; color: #444; margin: 0; line-height: 1.5; }
+    .keyword-badge { display: inline-block; background: #e8f0fe; color: #1a73e8; font-size: 11px; padding: 2px 8px; border-radius: 12px; margin-bottom: 10px; }
+    .footer { padding: 16px 28px; font-size: 12px; color: #aaa; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📰 News Alert</h1>
+      <p>Keyword match: <strong>{{ keyword }}</strong></p>
+    </div>
+
+    {% for article in articles %}
+    <div class="article">
+      <span class="keyword-badge">{{ keyword }}</span>
+      <h2><a href="{{ article.url }}">{{ article.title }}</a></h2>
+      <div class="meta">
+        {% if article.category %}{{ article.category | title }} &bull; {% endif %}
+        {% if article.published_at %}{{ article.published_at.strftime('%b %d, %Y') }}{% endif %}
+      </div>
+      {% if article.summary %}
+      <p>{{ article.summary }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="footer">
+      You are receiving this because you set up a keyword alert.<br/>
+      This digest was generated on {{ generated_at }}.
+    </div>
+  </div>
+</body>
+</html>
