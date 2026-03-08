@@ -60,7 +60,7 @@
 
 ## Phase 4 — AI Pipeline
 
-- [ ] Install Ollama locally (guide in `.github/copilot/ollama-setup.md`)
+- [x] Install Ollama locally (guide in `.github/copilot/ollama-setup.md`)
 - [x] Define `AIProviderPort` protocol (`domain/ports/ai_provider.py` — `AIResult` + `AIProviderPort`)
 - [x] Implement `OllamaAdapter` (local, no cost)
 - [x] Implement `GeminiAdapter` (Google free tier — tenacity retry, 3 attempts)
