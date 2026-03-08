@@ -34,16 +34,16 @@
 ## Phase 2 — REST API
 
 - [x] Bootstrap FastAPI app with versioned router (`/api/v1`)
-- [ ] Implement Pydantic v2 schemas for all API models
-- [ ] Implement `GET /articles` with filters (source, category, date, sentiment)
-- [ ] Implement `GET /articles/{id}`
-- [ ] Implement `PATCH /articles/{id}/read`
-- [ ] Implement CRUD for `/sources`
-- [ ] Implement `GET /profile` and `PUT /profile/interests`
+- [x] Implement Pydantic v2 schemas for all API models
+- [x] Implement `GET /articles` with filters (source, category, date, sentiment)
+- [x] Implement `GET /articles/{id}`
+- [x] Implement `PATCH /articles/{id}/read`
+- [x] Implement CRUD for `/sources`
+- [x] Implement `GET /profile` and `PUT /profile/interests`
 - [x] Implement `GET /health`
-- [ ] Add pagination to list endpoints
-- [ ] Write API integration tests (pytest + httpx AsyncClient)
-- [ ] Verify Swagger/ReDoc docs auto-generated correctly
+- [x] Add pagination to list endpoints
+- [x] Write API integration tests (pytest + httpx AsyncClient)
+- [x] Verify Swagger/ReDoc docs auto-generated correctly
 
 ---
 

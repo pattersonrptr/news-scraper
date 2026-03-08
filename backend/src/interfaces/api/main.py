@@ -10,6 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.src.core.config import get_settings
 from backend.src.core.logging import get_logger, setup_logging
+from backend.src.interfaces.api.routers import (
+    articles_router,
+    profile_router,
+    sources_router,
+)
 
 setup_logging()
 log = get_logger(__name__)
@@ -40,6 +45,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ---------------------------------------------------------------------------
+# Routers
+# ---------------------------------------------------------------------------
+_API_PREFIX = "/api/v1"
+
+app.include_router(articles_router, prefix=_API_PREFIX)
+app.include_router(sources_router, prefix=_API_PREFIX)
+app.include_router(profile_router, prefix=_API_PREFIX)
 
 
 @app.get("/api/v1/health", tags=["health"])
