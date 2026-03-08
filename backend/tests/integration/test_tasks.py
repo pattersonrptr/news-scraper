@@ -205,3 +205,41 @@ def test_compute_trends_task_retries_on_error() -> None:
 
         with pytest.raises(Retry):
             compute_trends_task.apply(kwargs={"hours": 24}).get()
+
+
+# ---------------------------------------------------------------------------
+# run_ai_pipeline_task — Celery AI pipeline (eager + mocked)
+# ---------------------------------------------------------------------------
+
+
+def test_run_ai_pipeline_task_returns_counts() -> None:
+    """run_ai_pipeline_task returns processed/skipped counts."""
+    mock_result = {"processed": 5, "skipped": 1}
+
+    with patch(
+        "backend.src.infrastructure.messaging.tasks.run_ai_pipeline._run_pipeline",
+        new=AsyncMock(return_value=mock_result),
+    ):
+        from backend.src.infrastructure.messaging.tasks.run_ai_pipeline import (
+            run_ai_pipeline_task,
+        )
+
+        result = run_ai_pipeline_task.apply(kwargs={"batch_size": 20}).get()
+        assert result["processed"] == 5
+        assert result["skipped"] == 1
+
+
+def test_run_ai_pipeline_task_retries_on_error() -> None:
+    """run_ai_pipeline_task raises Retry on persistent error."""
+    from celery.exceptions import Retry
+
+    with patch(
+        "backend.src.infrastructure.messaging.tasks.run_ai_pipeline._run_pipeline",
+        new=AsyncMock(side_effect=RuntimeError("AI down")),
+    ):
+        from backend.src.infrastructure.messaging.tasks.run_ai_pipeline import (
+            run_ai_pipeline_task,
+        )
+
+        with pytest.raises(Retry):
+            run_ai_pipeline_task.apply(kwargs={"batch_size": 20}).get()

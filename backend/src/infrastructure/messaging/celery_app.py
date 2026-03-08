@@ -15,6 +15,7 @@ celery_app = Celery(
     include=[
         "backend.src.infrastructure.messaging.tasks.collect_feeds",
         "backend.src.infrastructure.messaging.tasks.compute_trends",
+        "backend.src.infrastructure.messaging.tasks.run_ai_pipeline",
     ],
 )
 
@@ -37,6 +38,11 @@ celery_app.conf.update(
             "task": "backend.src.infrastructure.messaging.tasks.compute_trends.compute_trends_task",
             "schedule": 3600,  # every hour
             "kwargs": {"hours": 24},
+        },
+        "run-ai-pipeline-hourly": {
+            "task": "backend.src.infrastructure.messaging.tasks.run_ai_pipeline.run_ai_pipeline_task",
+            "schedule": 3600,  # every hour
+            "kwargs": {"batch_size": 20},
         },
     },
 )

@@ -61,16 +61,18 @@
 ## Phase 4 — AI Pipeline
 
 - [ ] Install Ollama locally (guide in `.github/copilot/ollama-setup.md`)
-- [ ] Define `AIProviderPort` protocol
-- [ ] Implement `OllamaAdapter` (local, no cost)
-- [ ] Implement `GeminiAdapter` (Google free tier)
-- [ ] Implement AI pipeline use case: summarize, sentiment, classify, extract entities
+- [x] Define `AIProviderPort` protocol (`domain/ports/ai_provider.py` — `AIResult` + `AIProviderPort`)
+- [x] Implement `OllamaAdapter` (local, no cost)
+- [x] Implement `GeminiAdapter` (Google free tier — tenacity retry, 3 attempts)
+- [x] Implement AI pipeline use case: summarize, sentiment, classify, extract entities
 - [x] Implement relevance scoring (explicit interests + implicit weights)
-- [ ] Implement `run_ai_pipeline` Celery batch task (runs hourly, batch of 20)
+- [x] Implement `run_ai_pipeline` Celery batch task (runs hourly, batch of 20)
 - [x] Expose `AI_PROVIDER` env var to switch between providers
-- [ ] Add Gemini → Ollama automatic fallback on rate limit
+- [x] Add Gemini → Ollama automatic fallback on rate limit
 - [x] Write unit tests for relevance scoring
-- [ ] Write integration tests for AI adapters (mock responses)
+- [x] Write unit tests for AI adapters (mock responses) — 13 new tests
+- [x] Write unit tests for `RunAIPipelineUseCase` — 8 new tests
+- [x] Write Celery task tests for `run_ai_pipeline_task` — 2 new tests
 
 ---
 
