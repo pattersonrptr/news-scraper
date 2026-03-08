@@ -52,7 +52,11 @@ class OllamaAdapter:
                 messages=[{"role": "user", "content": prompt}],
                 format="json",
             )
-            raw: str = response.message.content.strip()  # type: ignore[union-attr]
+            # SDK >= 0.4 returns a dict; older versions return an object with .message
+            if isinstance(response, dict):
+                raw: str = response["message"]["content"].strip()
+            else:
+                raw = response.message.content.strip()  # type: ignore[union-attr]
         except Exception as exc:
             logger.error("Ollama API error: %s", exc)
             raise AIProviderError("ollama", cause=exc) from exc

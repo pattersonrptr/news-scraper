@@ -33,10 +33,12 @@ export function Drawer({ open, onClose, children, title }: DrawerProps) {
       {/* Panel */}
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto bg-background p-6 shadow-xl",
+          "fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto",
+          "border-l border-slate-200 p-6 shadow-2xl",
           "transition-transform duration-300",
           open ? "translate-x-0" : "translate-x-full",
         )}
+        style={{ backgroundColor: "#ffffff", color: "#0f172a" }}
       >
         <div className="mb-4 flex items-center justify-between">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
