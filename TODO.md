@@ -27,7 +27,7 @@
 - [x] Write integration test for RSS collector (mock HTTP)
 - [x] Write Dockerfile for backend
 - [x] Write `docker-compose.yml` (backend + PostgreSQL + Redis)
-- [ ] Confirm RSS collection works end-to-end in Docker
+- [x] Confirm RSS collection works end-to-end in Docker
 
 ---
 
