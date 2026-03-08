@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Newspaper, Rss, Bell, TrendingUp, User } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Newspaper, Rss, Bell, TrendingUp, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth";
+import { authApi } from "@/lib/api";
 
 const navItems = [
   { href: "/", label: "Feed", icon: Newspaper },
@@ -15,6 +17,18 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { clearAuth } = useAuthStore();
+
+  async function handleLogout() {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore — stateless logout
+    }
+    clearAuth();
+    router.push("/login");
+  }
 
   return (
     <>
@@ -41,6 +55,15 @@ export function Sidebar() {
             </Link>
           ))}
         </nav>
+        <div className="border-t p-3">
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
+        </div>
       </aside>
 
       {/* Mobile bottom nav */}
@@ -62,3 +85,4 @@ export function Sidebar() {
     </>
   );
 }
+

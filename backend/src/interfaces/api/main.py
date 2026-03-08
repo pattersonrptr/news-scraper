@@ -17,6 +17,7 @@ from backend.src.use_cases.compile_digest import CompileDigestUseCase
 from backend.src.interfaces.api.routers import (
     alerts_router,
     articles_router,
+    auth_router,
     profile_router,
     sources_router,
 )
@@ -56,6 +57,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 _API_PREFIX = "/api/v1"
 
+app.include_router(auth_router, prefix=_API_PREFIX)
 app.include_router(articles_router, prefix=_API_PREFIX)
 app.include_router(sources_router, prefix=_API_PREFIX)
 app.include_router(profile_router, prefix=_API_PREFIX)

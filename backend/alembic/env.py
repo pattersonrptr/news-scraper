@@ -12,11 +12,12 @@ from alembic import context
 from backend.src.infrastructure.database.models.alert import Base as AlertBase      # noqa: F401
 from backend.src.infrastructure.database.models.article import Base as ArticleBase  # noqa: F401
 from backend.src.infrastructure.database.models.source import Base as SourceBase    # noqa: F401
+from backend.src.infrastructure.database.models.user import Base as UserBase        # noqa: F401
 
 # Use a unified metadata that includes all bases' tables
 import sqlalchemy as sa
 target_metadata = sa.MetaData()
-for base in (AlertBase, ArticleBase, SourceBase):
+for base in (AlertBase, ArticleBase, SourceBase, UserBase):
     for table in base.metadata.tables.values():
         table.tometadata(target_metadata)
 

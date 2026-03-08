@@ -1,6 +1,9 @@
 /**
  * Base API client.  All server-side and client-side calls go through here.
  * During development, Next.js rewrites /api/v1/* → FastAPI (see next.config.ts).
+ *
+ * When running in the browser the stored access token is attached as an
+ * `Authorization: Bearer <token>` header on every request.
  */
 
 const BASE =
@@ -20,9 +23,31 @@ class ApiError extends Error {
   }
 }
 
+/** Read the stored JWT from localStorage (browser only). */
+function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("news-scraper-auth");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { state?: { token?: string } };
+    return parsed?.state?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getStoredToken();
+  const authHeader: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader,
+      ...init?.headers,
+    },
     ...init,
   });
 
@@ -122,6 +147,59 @@ export const trendsApi = {
 
 export const digestApi = {
   preview: (hours = 24) => request<unknown>(`/digest/preview?hours=${hours}`),
+};
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+export interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
+export interface MeResponse {
+  id: string;
+  email: string;
+  display_name: string;
+  is_active: boolean;
+}
+
+export const authApi = {
+  register: (email: string, password: string, display_name?: string) =>
+    request<MeResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password, display_name: display_name ?? "" }),
+    }),
+
+  /** OAuth2 password flow — username field carries the e-mail. */
+  login: (email: string, password: string) => {
+    const form = new URLSearchParams();
+    form.set("username", email);
+    form.set("password", password);
+    return fetch(`${BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text().catch(() => res.statusText);
+        throw new ApiError(res.status, text);
+      }
+      return res.json() as Promise<TokenResponse>;
+    });
+  },
+
+  refresh: (refresh_token: string) =>
+    request<TokenResponse>("/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refresh_token }),
+    }),
+
+  me: () => request<MeResponse>("/auth/me"),
+
+  logout: () => request<void>("/auth/logout", { method: "POST" }),
 };
 
 export { ApiError };

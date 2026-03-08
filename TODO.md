@@ -112,14 +112,28 @@
 
 ---
 
-## Phase 7 — Multi-user Auth (Future)
+## Phase 7 — Multi-user Auth ✅
 
-- [ ] Add `users` table and FK constraints
-- [ ] Implement JWT authentication (login, refresh, logout)
-- [ ] Implement registration flow
-- [ ] Add auth middleware to FastAPI
-- [ ] Add auth pages to frontend (login, register)
-- [ ] Enable row-level data isolation
+- [x] Add `users` table with auth + profile fields (`UserModel`, migration `ec2d8fa923e7`)
+- [x] Implement `SQLUserRepository` (create, get_by_id, get_by_email, update_profile, update_implicit_weights)
+- [x] Implement `infrastructure/auth/password.py` (bcrypt hash + verify via passlib)
+- [x] Implement `infrastructure/auth/jwt.py` (create_access_token, create_refresh_token, decode_token — HS256)
+- [x] Add JWT settings to `Settings`: `jwt_secret_key`, `jwt_algorithm`, `access_token_expire_minutes`, `refresh_token_expire_days`
+- [x] Implement `RegisterUserUseCase` (unique email check → hash → persist)
+- [x] Implement `LoginUserUseCase` (verify password → return access + refresh tokens)
+- [x] Implement `get_current_user` dependency (decode Bearer JWT → `UserProfile`)
+- [x] Implement `/auth` router: `POST /register`, `POST /login` (OAuth2 form), `POST /refresh`, `POST /logout`, `GET /me`
+- [x] Update `profile` router: DB-backed, scoped to authenticated user
+- [x] Update `alerts` router: scoped to authenticated user (per-user isolation)
+- [x] Frontend: Zustand `authStore` (token + user, persisted in localStorage)
+- [x] Frontend: `login` and `register` pages with form validation
+- [x] Frontend: `ProtectedRoute` component (redirects to /login if unauthenticated)
+- [x] Frontend: `api.ts` attaches `Authorization: Bearer <token>` header on all requests
+- [x] Frontend: sidebar logout button (calls `POST /auth/logout` + clears store)
+- [x] Auth deps: `python-jose[cryptography]`, `passlib[bcrypt]`, `python-multipart`, `pydantic[email]`, `bcrypt==4.0.1`
+- [x] Write 15 unit tests (password, JWT, RegisterUserUseCase, LoginUserUseCase)
+- [x] Write 9 integration tests (`/auth/register`, `/auth/login`, `/auth/refresh`, protected endpoints)
+- [x] 138 tests passing total
 
 ---
 

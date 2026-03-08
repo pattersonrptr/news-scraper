@@ -2,6 +2,8 @@
 
 Provides CRUD for the alert notification log.
 Alert rules (keywords) are managed via PUT /profile/interests.
+All endpoints require a valid Bearer token and are scoped to the
+authenticated user.
 """
 
 from __future__ import annotations
@@ -11,13 +13,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from backend.src.domain.entities.alert import Alert, NotificationChannel
-from backend.src.interfaces.api.dependencies import get_alert_repo
+from backend.src.domain.entities.user_profile import UserProfile
+from backend.src.interfaces.api.dependencies import (
+    get_alert_repo,
+    get_current_user,
+)
 from backend.src.interfaces.api.schemas.alert import AlertCreateRequest, AlertResponse
 from backend.src.infrastructure.database.repositories.alert_repo import SQLAlertRepository
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
-
-_MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _to_response(alert: Alert) -> AlertResponse:
@@ -35,9 +39,10 @@ def _to_response(alert: Alert) -> AlertResponse:
 async def list_alerts(
     limit: int = 50,
     repo: SQLAlertRepository = Depends(get_alert_repo),
+    current_user: UserProfile = Depends(get_current_user),
 ) -> list[AlertResponse]:
-    """Return the most recent alerts for the default user."""
-    alerts = await repo.list_by_user(user_id=_MVP_USER_ID, limit=limit)
+    """Return the most recent alerts for the authenticated user."""
+    alerts = await repo.list_by_user(user_id=current_user.id, limit=limit)
     return [_to_response(a) for a in alerts]
 
 
@@ -45,10 +50,11 @@ async def list_alerts(
 async def create_alert(
     body: AlertCreateRequest,
     repo: SQLAlertRepository = Depends(get_alert_repo),
+    current_user: UserProfile = Depends(get_current_user),
 ) -> AlertResponse:
     """Manually log an alert entry (useful for testing)."""
     alert = Alert(
-        user_id=_MVP_USER_ID,
+        user_id=current_user.id,
         article_id=body.article_id,
         trigger_keyword=body.trigger_keyword,
         channel=NotificationChannel(body.channel),
@@ -61,9 +67,10 @@ async def create_alert(
 async def delete_alert(
     alert_id: uuid.UUID,
     repo: SQLAlertRepository = Depends(get_alert_repo),
+    current_user: UserProfile = Depends(get_current_user),
 ) -> None:
-    """Delete an alert log entry by ID."""
+    """Delete an alert log entry by ID (must belong to the authenticated user)."""
     existing = await repo.get_by_id(alert_id)
-    if existing is None:
+    if existing is None or existing.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found")
     await repo.delete(alert_id)

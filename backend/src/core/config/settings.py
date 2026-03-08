@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     app_secret_key: str = "change-me-in-production"
 
     # -------------------------------------------------------------------------
+    # JWT / Auth
+    # -------------------------------------------------------------------------
+    jwt_secret_key: str = "change-me-jwt-secret"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
+
+    # -------------------------------------------------------------------------
     # Database
     # -------------------------------------------------------------------------
     database_url: str = "sqlite+aiosqlite:///./news.db"

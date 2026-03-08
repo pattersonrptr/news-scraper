@@ -1,16 +1,16 @@
 """Profile router — /api/v1/profile
 
-MVP: single-user stub. Returns a hard-coded default profile until
-multi-user auth is implemented in a later phase.
+All endpoints require a valid Bearer token.
+Data is persisted to the `users` table via SQLUserRepository.
 """
 
 from __future__ import annotations
 
-import uuid
-from datetime import time
+from fastapi import APIRouter, Depends
 
-from fastapi import APIRouter, status
-
+from backend.src.domain.entities.user_profile import UserProfile
+from backend.src.infrastructure.database.repositories.user_repo import SQLUserRepository
+from backend.src.interfaces.api.dependencies import get_current_user, get_user_repo
 from backend.src.interfaces.api.schemas.profile import (
     ProfileResponse,
     UpdateInterestsRequest,
@@ -18,41 +18,53 @@ from backend.src.interfaces.api.schemas.profile import (
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
-# ---------------------------------------------------------------------------
-# MVP stub: single in-memory profile (replaced by DB in Phase 6 — multi-user)
-# ---------------------------------------------------------------------------
-_DEFAULT_PROFILE = ProfileResponse(
-    id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
-    display_name="Default User",
-    explicit_interests=[],
-    implicit_weights={},
-    alert_keywords=[],
-    digest_time=time(8, 0),
-    notification_email="",
-    is_active=True,
-)
 
-_profile = _DEFAULT_PROFILE.model_copy()
+def _entity_to_response(profile: UserProfile) -> ProfileResponse:
+    return ProfileResponse(
+        id=profile.id,
+        display_name=profile.display_name,
+        explicit_interests=profile.explicit_interests,
+        implicit_weights=profile.implicit_weights,
+        alert_keywords=profile.alert_keywords,
+        digest_time=profile.digest_time,
+        notification_email=profile.notification_email,
+        is_active=profile.is_active,
+    )
 
 
 @router.get("", response_model=ProfileResponse)
-async def get_profile() -> ProfileResponse:
-    """Return the current user profile."""
-    return _profile
+async def get_profile(
+    current_user: UserProfile = Depends(get_current_user),
+) -> ProfileResponse:
+    """Return the authenticated user's profile."""
+    return _entity_to_response(current_user)
 
 
 @router.put("/interests", response_model=ProfileResponse)
-async def update_interests(body: UpdateInterestsRequest) -> ProfileResponse:
+async def update_interests(
+    body: UpdateInterestsRequest,
+    current_user: UserProfile = Depends(get_current_user),
+    user_repo: SQLUserRepository = Depends(get_user_repo),
+) -> ProfileResponse:
     """Update explicit interests, alert keywords, digest time, and notification email."""
-    global _profile  # noqa: PLW0603 — intentional MVP stub
+    updated = UserProfile(
+        id=current_user.id,
+        email=current_user.email,
+        hashed_password=current_user.hashed_password,
+        display_name=current_user.display_name,
+        explicit_interests=body.explicit_interests,
+        implicit_weights=current_user.implicit_weights,
+        alert_keywords=body.alert_keywords,
+        digest_time=(
+            body.digest_time if body.digest_time is not None else current_user.digest_time
+        ),
+        notification_email=(
+            body.notification_email
+            if body.notification_email is not None
+            else current_user.notification_email
+        ),
+        is_active=current_user.is_active,
+    )
+    saved = await user_repo.update_profile(updated)
+    return _entity_to_response(saved)
 
-    updates: dict = {}
-    updates["explicit_interests"] = body.explicit_interests
-    updates["alert_keywords"] = body.alert_keywords
-    if body.digest_time is not None:
-        updates["digest_time"] = body.digest_time
-    if body.notification_email is not None:
-        updates["notification_email"] = body.notification_email
-
-    _profile = _profile.model_copy(update=updates)
-    return _profile
