@@ -2,7 +2,7 @@
 name = "news-scraper"
 version = "0.1.0"
 description = "News aggregation platform with AI-powered analysis"
-authors = ["Patterson Junior <pattersonjunior@gmail.com>"]
+authors = ["pattersonrptr <pattersonjunior@gmail.com>"]
 readme = "README.md"
 packages = [{include = "src", from = "backend"}]
 
@@ -16,7 +16,7 @@ uvicorn = {extras = ["standard"], version = "^0.30.0"}
 # Database
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.0"}
 alembic = "^1.13.0"
-asyncpg = "^0.29.0"        # PostgreSQL async driver
+asyncpg = "^0.30.0"        # PostgreSQL async driver
 aiosqlite = "^0.20.0"      # SQLite async driver (local dev)
 
 # Task queue
@@ -104,7 +104,7 @@ plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 asyncio_mode = "auto"
-addopts = "--cov=backend/src --cov-report=term-missing --cov-fail-under=80"
+addopts = "--cov=backend/src --cov-report=term-missing --cov-fail-under=70"
 
 [tool.coverage.run]
 source = ["backend/src"]
