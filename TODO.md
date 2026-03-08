@@ -52,9 +52,9 @@
 - [x] Configure Celery with Redis broker + result backend
 - [x] Configure Celery Beat for periodic tasks
 - [x] Implement `collect_feeds` Celery task (per-source interval)
-- [ ] Implement `compute_trends` task (hourly)
+- [x] Implement `compute_trends` task (hourly)
 - [x] Add Celery worker and Beat containers to docker-compose
-- [ ] Write task integration tests
+- [x] Write task integration tests
 
 ---
 

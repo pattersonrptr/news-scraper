@@ -14,6 +14,7 @@ celery_app = Celery(
     backend=_settings.celery_result_backend,
     include=[
         "backend.src.infrastructure.messaging.tasks.collect_feeds",
+        "backend.src.infrastructure.messaging.tasks.compute_trends",
     ],
 )
 
@@ -31,6 +32,11 @@ celery_app.conf.update(
         "collect-all-feeds": {
             "task": "backend.src.infrastructure.messaging.tasks.collect_feeds.collect_feeds_task",
             "schedule": 60 * _settings.default_fetch_interval,  # seconds
+        },
+        "compute-trends-hourly": {
+            "task": "backend.src.infrastructure.messaging.tasks.compute_trends.compute_trends_task",
+            "schedule": 3600,  # every hour
+            "kwargs": {"hours": 24},
         },
     },
 )

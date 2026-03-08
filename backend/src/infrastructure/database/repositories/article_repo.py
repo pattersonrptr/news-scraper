@@ -21,11 +21,11 @@ def _model_to_entity(m: ArticleModel) -> Article:
         url_hash=m.url_hash,
         content_hash=m.content_hash,
         title=m.title,
-        body=m.body_compressed or "",
+        body=str(m.body_compressed) if m.body_compressed is not None else "",
         summary=m.summary,
         published_at=m.published_at,
         collected_at=m.collected_at,
-        language=m.language,
+        language=m.language or "en",
         sentiment=m.sentiment,
         sentiment_score=m.sentiment_score,
         category=m.category,
@@ -147,3 +147,14 @@ class SQLArticleRepository:
         if model:
             model.is_read = True
             await self._session.flush()
+
+    async def list_recent(self, hours: int = 24, limit: int = 500) -> list[Article]:
+        from datetime import datetime, timedelta, timezone
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        result = await self._session.execute(
+            select(ArticleModel)
+            .where(ArticleModel.collected_at >= cutoff)
+            .order_by(ArticleModel.collected_at.desc())
+            .limit(limit)
+        )
+        return [_model_to_entity(m) for m in result.scalars().all()]

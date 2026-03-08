@@ -19,6 +19,17 @@ from backend.src.interfaces.api.dependencies import get_article_repo, get_sessio
 from backend.src.interfaces.api.main import app
 
 # ---------------------------------------------------------------------------
+# Celery — always-eager mode (no broker needed in tests)
+# ---------------------------------------------------------------------------
+
+from backend.src.infrastructure.messaging.celery_app import celery_app
+
+celery_app.conf.update(
+    task_always_eager=True,
+    task_eager_propagates=True,  # propagate exceptions so tests can catch them
+)
+
+# ---------------------------------------------------------------------------
 # In-memory SQLite engine for tests
 # ---------------------------------------------------------------------------
 

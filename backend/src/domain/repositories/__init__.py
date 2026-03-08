@@ -58,6 +58,10 @@ class ArticleRepository(Protocol):
         """Mark article as read (triggers implicit interest update)."""
         ...
 
+    async def list_recent(self, hours: int = 24, limit: int = 500) -> list[Article]:
+        """Return articles collected in the last N hours (for trend computation)."""
+        ...
+
 
 @runtime_checkable
 class SourceRepository(Protocol):
