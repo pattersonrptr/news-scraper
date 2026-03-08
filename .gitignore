@@ -14,6 +14,7 @@ build/
 .ruff_cache/
 .pytest_cache/
 .coverage
+.coverage.*
 coverage.xml
 htmlcov/
 .tox/
@@ -31,6 +32,7 @@ env/
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # =============================================================================
 # Database
@@ -45,6 +47,13 @@ env/
 docker-compose.override.yml
 
 # =============================================================================
+# Celery
+# =============================================================================
+celerybeat-schedule
+celerybeat-schedule.db
+celerybeat.pid
+
+# =============================================================================
 # Node / Frontend
 # =============================================================================
 node_modules/
@@ -52,11 +61,17 @@ frontend/.next/
 frontend/out/
 frontend/dist/
 frontend/.env.local
+frontend/.env
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
 
 # =============================================================================
 # IDE / Editor
 # =============================================================================
 .vscode/settings.json
+.vscode/launch.json
 .idea/
 *.swp
 *.swo
@@ -72,7 +87,15 @@ logs/
 # =============================================================================
 # Alembic
 # =============================================================================
-# Keep migrations, ignore local sqlite state files
+# Keep migration scripts, ignore local state
+alembic/versions/*.pyc
+
+# =============================================================================
+# Ollama
+# =============================================================================
+# Model files are large — never commit them
+*.gguf
+*.bin
 
 # =============================================================================
 # Misc
@@ -80,3 +103,5 @@ logs/
 *.bak
 *.tmp
 .cache/
+*.pid
+
