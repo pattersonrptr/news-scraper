@@ -22,9 +22,9 @@
 - [x] Implement `RSSCollector` adapter (feedparser + httpx)
 - [x] Implement deduplication service (URL hash + content hash)
 - [x] Implement `CollectFeedsUseCase`
-- [ ] Add 5 initial default sources (see `docs/SPEC.md` §7)
+- [x] Add 5 initial default sources (see `docs/SPEC.md` §7)
 - [x] Write unit tests for deduplication service
-- [ ] Write integration test for RSS collector (mock HTTP)
+- [x] Write integration test for RSS collector (mock HTTP)
 - [x] Write Dockerfile for backend
 - [x] Write `docker-compose.yml` (backend + PostgreSQL + Redis)
 - [ ] Confirm RSS collection works end-to-end in Docker

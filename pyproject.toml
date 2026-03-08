@@ -6,6 +6,9 @@ authors = ["pattersonrptr <pattersonjunior@gmail.com>"]
 readme = "README.md"
 packages = [{include = "src", from = "backend"}]
 
+[tool.poetry.scripts]
+seed-sources = "backend.src.interfaces.cli.seed_sources:main"
+
 [tool.poetry.dependencies]
 python = "^3.12"
 
