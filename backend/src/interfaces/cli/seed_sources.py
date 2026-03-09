@@ -1,12 +1,12 @@
-"""CLI seed script: inserts the 5 default news sources defined in SPEC.md §7.
+"""CLI seed script: inserts the 5 default news sources defined in SPEC.md §7
+and creates a default admin user if none exists.
 
 Usage:
     poetry run python -m backend.src.interfaces.cli.seed_sources
     # or from project root:
     PYTHONPATH=. python -m backend.src.interfaces.cli.seed_sources
 
-The script is idempotent: if a source with the same feed_url already exists it
-is skipped, so running it multiple times is safe.
+The script is idempotent: existing sources and users are skipped.
 """
 
 from __future__ import annotations
@@ -18,8 +18,12 @@ from backend.src.core.config import get_settings
 from backend.src.core.logging import get_logger, setup_logging
 from backend.src.domain.entities.source import Source, SourceType
 from backend.src.infrastructure.database.engine import AsyncSessionFactory
+from backend.src.infrastructure.auth.password import hash_password
 from backend.src.infrastructure.database.repositories.source_repo import (
     SQLSourceRepository,
+)
+from backend.src.infrastructure.database.repositories.user_repo import (
+    SQLUserRepository,
 )
 
 setup_logging()
@@ -66,9 +70,18 @@ DEFAULT_SOURCES: list[dict[str, str]] = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# Default admin user
+# ---------------------------------------------------------------------------
+DEFAULT_ADMIN = {
+    "email": "admin@news.com",
+    "password": "admin123",
+    "display_name": "Admin",
+}
+
 
 async def _seed() -> None:
-    """Insert default sources into the database, skipping existing ones."""
+    """Insert default sources and admin user into the database (idempotent)."""
     settings = get_settings()
     log.info("seed_sources.start", database_url=settings.database_url)
 
@@ -115,6 +128,28 @@ async def _seed() -> None:
         skipped=skipped,
         total=inserted + skipped,
     )
+
+    # -----------------------------------------------------------------------
+    # Seed default admin user
+    # -----------------------------------------------------------------------
+    async with AsyncSessionFactory() as session:
+        user_repo = SQLUserRepository(session)
+        existing_user = await user_repo.get_by_email(DEFAULT_ADMIN["email"])
+
+        if existing_user is None:
+            await user_repo.create(
+                email=DEFAULT_ADMIN["email"],
+                hashed_password=hash_password(DEFAULT_ADMIN["password"]),
+                display_name=DEFAULT_ADMIN["display_name"],
+            )
+            await session.commit()
+            log.info("seed_admin.inserted", email=DEFAULT_ADMIN["email"])
+        else:
+            log.info(
+                "seed_admin.skip",
+                email=DEFAULT_ADMIN["email"],
+                reason="already_exists",
+            )
 
 
 def main() -> None:
