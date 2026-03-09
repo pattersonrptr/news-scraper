@@ -85,10 +85,10 @@ docker compose up -d
 # 6. Create your account at http://localhost:3000/register
 #    or use the test account: admin@news.com / admin123
 
-# 7. (Optional) Trigger AI pipeline immediately instead of waiting for the hourly schedule
-docker compose exec celery_worker celery -A backend.src.infrastructure.messaging.celery_app \
-  call backend.src.infrastructure.messaging.tasks.run_ai_pipeline.run_ai_pipeline_task \
-  --kwargs='{"batch_size": 50}'
+# 7. (Optional) Trigger tasks manually instead of waiting for the schedule
+docker compose exec backend python -m backend.src.interfaces.cli.manage collect-feeds
+docker compose exec backend python -m backend.src.interfaces.cli.manage run-ai-pipeline --batch-size 50
+docker compose exec backend python -m backend.src.interfaces.cli.manage compute-trends --hours 24
 ```
 
 > **Port mapping:** PostgreSQL is exposed on `5434` (not 5432) and Redis on `6380` (not 6379) to avoid conflicts with local installs.
@@ -138,7 +138,59 @@ npm run dev
 
 ---
 
-## Development Workflow
+## Management CLI (`manage.py`)
+
+Inspired by Django's `manage.py`. A single entry point to trigger any Celery task synchronously (in-process, no broker required) and run maintenance operations. Useful for debugging, one-off runs, and scripting.
+
+```bash
+# Inside Docker (recommended):
+docker compose exec backend python -m backend.src.interfaces.cli.manage <command> [options]
+
+# Or with Poetry (local dev):
+poetry run manage <command> [options]
+```
+
+### Available Commands
+
+| Command | When / Why to use it |
+|---|---|
+| `collect-feeds` | Pull new articles from all active RSS sources right now, without waiting for the 60-minute schedule. Use after adding a new source or when you want fresh data immediately. |
+| `run-ai-pipeline` | Process the backlog of unanalyzed articles (summary, sentiment, category, entities, relevance). Run after a fresh install, after Ollama was offline, or to catch up a large backlog. |
+| `send-alerts` | Check the last hour of articles against user keyword rules and fire any pending email alerts. Run to verify alert delivery without waiting for the 15-minute schedule. |
+| `send-digest` | Compile and send the daily digest email to all active users. Run to preview/test digest delivery at any time of day. |
+| `update-weights` | Recalculate implicit interest weights from the full article read history. Run after bulk-importing articles or to force a profile recalculation outside the daily schedule. |
+| `compute-trends` | Aggregate trending keywords and sentiment across recent articles and persist the snapshot. Run to refresh the Trends page data without waiting for the hourly schedule. |
+| `seed` | Idempotent seed: creates default RSS sources and the `admin@news.com` admin user. Safe to run multiple times. Run on a fresh database or after wiping data. |
+
+### Options
+
+| Command | Option | Default | Description |
+|---|---|---|---|
+| `run-ai-pipeline` | `--batch-size N` | `20` | Articles processed per run |
+| `compute-trends` | `--hours N` | `24` | Look-back window for article aggregation |
+
+### Examples
+
+```bash
+# Collect new articles right now
+docker compose exec backend python -m backend.src.interfaces.cli.manage collect-feeds
+
+# Process 50 articles through the AI pipeline in one shot
+docker compose exec backend python -m backend.src.interfaces.cli.manage run-ai-pipeline --batch-size 50
+
+# Refresh the Trends page with the last 48 hours of data
+docker compose exec backend python -m backend.src.interfaces.cli.manage compute-trends --hours 48
+
+# Verify that keyword alerts are firing correctly
+docker compose exec backend python -m backend.src.interfaces.cli.manage send-alerts
+
+# Rebuild a clean database from scratch
+docker compose exec backend python -m backend.src.interfaces.cli.manage seed
+```
+
+> **How it works:** each command calls the corresponding Celery task via `.apply()`, which runs it synchronously in the same process — no broker, no worker, no queue needed. The full task output (collected, processed, matched, etc.) is printed to stdout.
+
+---
 
 ```bash
 # Run tests

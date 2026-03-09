@@ -45,6 +45,7 @@ domain → use_cases → interfaces (FastAPI/CLI/Celery)
 - **Alert keyword monitoring vs. alert log**: The `alerts` DB table is a **history log** of fired notifications. The keyword watch rules are stored on the user profile (`users.alert_keywords`), managed via `PUT /profile/interests`. The frontend `POST /alerts` currently writes to the log, not the profile — this is a known UX gap tracked in Phase 10.
 - **`send_alerts` task reads from DB**: All three background tasks (`send_alerts`, `send_daily_digest`, `update_implicit_weights`) now use `SQLUserRepository` to load the real user profile. The old `InMemoryUserProfileRepository` stub has been replaced. `SQLUserRepository.get_default()` fetches the first active user.
 - **Top Keywords filtering**: `ComputeTrendsUseCase` uses an expanded stopword list covering both English and Portuguese (pt-BR) functional words. Minimum word length is 4 characters. Keywords are extracted from both `title` and `summary` fields.
+- **Management CLI (`manage.py`)**: `backend/src/interfaces/cli/manage.py` is a Django-inspired single entry point for running Celery tasks and maintenance operations manually. Each subcommand calls the corresponding Celery task via `.apply()` (synchronous, in-process — no broker needed). Registered as `manage` in `[tool.poetry.scripts]`. Run with `docker compose exec backend python -m backend.src.interfaces.cli.manage <command>` or `poetry run manage <command>`. Available commands: `collect-feeds`, `run-ai-pipeline` (`--batch-size N`), `send-alerts`, `send-digest`, `update-weights`, `compute-trends` (`--hours N`), `seed`.
 
 ## Code Style
 
@@ -73,6 +74,7 @@ domain → use_cases → interfaces (FastAPI/CLI/Celery)
 | `backend/src/domain/repositories/` | Abstract port interfaces |
 | `backend/src/infrastructure/ai/` | AI provider adapters |
 | `backend/src/interfaces/api/main.py` | FastAPI application entrypoint |
+| `backend/src/interfaces/cli/manage.py` | Management CLI — manually trigger any Celery task or maintenance operation |
 
 ## Default Sources (Phase 1)
 

@@ -220,3 +220,60 @@ The frontend "Alerts" page currently uses `POST /alerts` to create log entries, 
 
 One email per keyword per hour (`_RATE_LIMIT_HOURS = 1` in `SendAlertsUseCase`). Checked by querying `alerts.list_recent_by_keyword()` before sending.
 
+---
+
+# ADR-011: Management CLI — Django-style `manage.py`
+
+**Date:** 2026-03-09
+**Status:** Accepted
+
+## Context
+
+Celery tasks are scheduled automatically via Celery Beat, but there is no way to trigger them manually without knowing the internal Celery CLI syntax (`celery -A ... call ... --kwargs='...'`). Developers need to:
+
+- Trigger a specific task on demand (e.g. after adding a new source, after fixing a bug, during debugging).
+- Run maintenance operations (seed, re-process articles) without memorising long commands.
+- Verify that tasks produce the expected output in isolation.
+
+## Decision
+
+Implement a single CLI entry point at `backend/src/interfaces/cli/manage.py`, inspired by Django's `manage.py`. Each subcommand maps to a handler function that calls the corresponding Celery task via `.apply()`.
+
+```
+python -m backend.src.interfaces.cli.manage <command> [options]
+poetry run manage <command> [options]
+```
+
+Available commands: `collect-feeds`, `run-ai-pipeline`, `send-alerts`, `send-digest`, `update-weights`, `compute-trends`, `seed`.
+
+Registered as a Poetry script (`manage`) in `pyproject.toml` `[tool.poetry.scripts]`.
+
+## Key Design Choice — `.apply()` over `.delay()`
+
+Tasks are invoked with `.apply()` (synchronous, in-process execution) rather than `.delay()` (asynchronous, broker-dispatched). Rationale:
+
+- **No broker dependency**: works without a running Redis/RabbitMQ — runs standalone in any shell.
+- **Immediate feedback**: stdout from the task appears directly in the terminal; no need to watch Flower or worker logs.
+- **Deterministic**: the developer sees the exact result of that run before the shell returns.
+- **Trade-off**: runs in the calling process, so heavy tasks (large AI batches) block the terminal for their duration. Acceptable for a CLI tool used intentionally.
+
+## Structure
+
+```
+interfaces/cli/
+├── manage.py          # Entry point — argparse + _COMMANDS dispatch table
+└── seed_sources.py    # Async seed function, also callable from manage seed
+```
+
+Each handler follows the same pattern:
+1. Import the task lazily (inside the function) to avoid circular imports at module load time.
+2. Call `task.apply(kwargs={...})`.
+3. Call `.get()` on the result to block until done.
+4. Print a `✔  Done — key=value` summary line to stdout.
+
+## Consequences
+
+- Any new Celery task can be exposed as a CLI command by adding a `cmd_<name>` function and one entry to `_COMMANDS`.
+- The `seed` command re-uses the existing `_seed()` coroutine from `seed_sources.py` via `asyncio.run()`, keeping a single source of truth for seed logic.
+- Error handling: `KeyboardInterrupt` prints `⚠  Interrupted.`; all other exceptions print `✖  Error: <msg>` and exit with code 1.
+
