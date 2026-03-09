@@ -191,3 +191,32 @@ Enforced via `commitlint` + `pre-commit` hook.
 - All DB tables have a `user_id` column (nullable in Phase 1).
 - No multi-user auth enforced in MVP (single hardcoded user).
 - Auth (JWT) will be added in Phase 7 with zero schema changes required.
+
+---
+
+# ADR-010: Alert Architecture — Keyword Watch vs. Alert Log
+
+**Date:** 2026-03-08
+**Status:** Accepted
+
+## Context
+
+During manual testing it was discovered that `POST /alerts` and the `send_alerts_task` serve different purposes that were conflated.
+
+## Decision
+
+Two separate concerns:
+
+1. **Keyword watch rules** (`users.alert_keywords` column, managed via `PUT /profile/interests`): the list of words the background task monitors. Set by the user via the profile page.
+2. **Alert history log** (`alerts` table, `GET/POST/DELETE /alerts`): a record of every notification that was fired, with timestamp and matched article reference.
+
+The `send_alerts_task` reads keywords from the user profile (via `SQLUserRepository.get_default()`), scans recent articles, and writes to the alert log when a match is found and the email is sent.
+
+## Known UX Gap (Phase 10)
+
+The frontend "Alerts" page currently uses `POST /alerts` to create log entries, which gives users the impression they are setting up keyword monitoring. This will be redesigned in Phase 10: the page will manage `alert_keywords` on the profile and display the alert log separately.
+
+## Rate Limiting
+
+One email per keyword per hour (`_RATE_LIMIT_HOURS = 1` in `SendAlertsUseCase`). Checked by querying `alerts.list_recent_by_keyword()` before sending.
+
