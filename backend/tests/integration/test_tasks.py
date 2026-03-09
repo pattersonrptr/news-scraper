@@ -87,11 +87,32 @@ class TestComputeTrendsUseCase:
         assert keywords.get("python", 0) == 2
 
     def test_stopwords_are_excluded(self) -> None:
-        articles = [_make_article(title="The quick brown fox")]
+        # English stopwords
+        articles = [_make_article(title="The quick brown foxes")]
         result = ComputeTrendsUseCase(articles=articles).execute()
         keywords = dict(result["top_keywords"])
         assert "the" not in keywords
         assert "a" not in keywords
+
+    def test_portuguese_stopwords_are_excluded(self) -> None:
+        # Common pt-BR functional words must not appear in top keywords
+        articles = [_make_article(title="Gaza diz que para com por uma guerra nuclear")]
+        result = ComputeTrendsUseCase(articles=articles).execute()
+        keywords = dict(result["top_keywords"])
+        for stopword in ("que", "para", "com", "por", "uma", "diz"):
+            assert stopword not in keywords, f"pt-BR stopword '{stopword}' leaked into keywords"
+        # Meaningful words with length > 3 should remain
+        assert "gaza" in keywords
+        assert "guerra" in keywords
+        assert "nuclear" in keywords
+
+    def test_min_word_length_filters_short_tokens(self) -> None:
+        # Words of 3 chars or fewer are always dropped regardless of stopwords
+        articles = [_make_article(title="BBC CEO CFO war oil gas")]
+        result = ComputeTrendsUseCase(articles=articles).execute()
+        keywords = dict(result["top_keywords"])
+        for short in ("war", "oil", "gas"):
+            assert short not in keywords
 
     def test_sentiment_distribution_keys(self) -> None:
         articles = [

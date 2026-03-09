@@ -16,12 +16,48 @@ from backend.src.domain.entities.article import Article
 
 log = get_logger(__name__)
 
-# Stopwords to ignore when extracting title keywords
+# Stopwords to ignore when extracting keywords.
+# Covers both English and Portuguese (pt-BR) functional words so that common
+# grammatical tokens don't pollute the Top Keywords chart.
 _STOPWORDS: frozenset[str] = frozenset({
+    # ── English ──────────────────────────────────────────────────────────────
     "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or",
     "but", "is", "it", "its", "this", "that", "with", "as", "by", "from",
     "was", "are", "be", "been", "has", "have", "had", "will", "not", "no",
     "new", "how", "why", "what", "who", "says", "after", "over", "about",
+    "up", "out", "into", "than", "more", "also", "just", "can", "all",
+    "one", "two", "his", "her", "him", "she", "he", "they", "their",
+    "we", "our", "you", "your", "me", "my", "do", "did", "does", "so",
+    "if", "when", "which", "where", "would", "could", "should", "may",
+    "get", "now", "say", "said", "then", "only", "off", "got", "still",
+    "amid", "amid", "per", "via", "ago", "yet",
+    # ── Portuguese (pt-BR) ───────────────────────────────────────────────────
+    # articles / prepositions / contractions
+    "o", "a", "os", "as", "um", "uma", "uns", "umas",
+    "de", "do", "da", "dos", "das", "no", "na", "nos", "nas",
+    "ao", "aos", "à", "às", "pelo", "pela", "pelos", "pelas",
+    "em", "com", "por", "para", "entre", "sobre", "após",
+    "até", "desde", "sem", "sob", "num", "numa", "nuns", "numas",
+    "dum", "duma", "duns", "dumas",
+    # pronouns
+    "eu", "tu", "ele", "ela", "nós", "vós", "eles", "elas",
+    "me", "te", "se", "lhe", "nos", "vos", "lhes",
+    "isso", "este", "esta", "estes", "estas", "esse", "essa",
+    "esses", "essas", "aquele", "aquela", "aqueles", "aquelas",
+    "que", "quem", "qual", "quais",
+    # conjunctions / adverbs
+    "e", "ou", "mas", "porém", "contudo", "entretanto", "todavia",
+    "porque", "pois", "como", "quando", "onde", "embora",
+    "já", "não", "nem", "só", "sim", "muito", "mais", "menos",
+    "bem", "mal", "assim", "ainda", "também", "sempre", "nunca",
+    "aqui", "ali", "lá", "cá", "então", "antes", "depois",
+    "logo", "apenas", "mesmo", "tanto", "tão", "seu", "sua",
+    "seus", "suas", "meu", "minha", "meus", "minhas",
+    # auxiliary verbs / copula forms
+    "é", "são", "era", "eram", "ser", "estar", "está", "estão",
+    "foi", "foram", "ser", "ter", "tem", "têm", "tinha", "tinham",
+    "ter", "haver", "há", "houve", "diz", "disse", "afirma",
+    "vai", "vão", "vir", "ser", "fazer", "faz",
 })
 
 
@@ -57,11 +93,17 @@ class ComputeTrendsUseCase:
             if article.category:
                 category_counter[article.category.lower()] += 1
 
-            # Keywords from title (simple word tokenisation)
-            for word in article.title.lower().split():
-                cleaned = word.strip(".,!?\"'();:-")
-                if cleaned and len(cleaned) > 2 and cleaned not in _STOPWORDS:
-                    keyword_counter[cleaned] += 1
+            # Keywords from title + summary (simple word tokenisation).
+            # Use len > 3 to skip most 2-3 letter functional words that slipped
+            # through the stopword list (e.g. "diz", "por", "com").
+            text_sources = [article.title]
+            if article.summary:
+                text_sources.append(article.summary)
+            for text in text_sources:
+                for word in text.lower().split():
+                    cleaned = word.strip(".,!?\"'();:-«»""''")
+                    if cleaned and len(cleaned) > 3 and cleaned not in _STOPWORDS:
+                        keyword_counter[cleaned] += 1
 
             # Sentiment
             sentiment_counter[article.sentiment] += 1
