@@ -25,10 +25,10 @@ export default function LoginPage() {
       // Store the token first so getStoredToken() returns it for the next request
       localStorage.setItem(
         "news-scraper-auth",
-        JSON.stringify({ state: { token: tokens.access_token, user: null } }),
+        JSON.stringify({ state: { token: tokens.access_token, refresh_token: tokens.refresh_token, user: null } }),
       );
       const me = await authApi.me();
-      setAuth(tokens.access_token, {
+      setAuth(tokens.access_token, tokens.refresh_token, {
         id: me.id,
         email: me.email,
         display_name: me.display_name,

@@ -36,6 +36,47 @@ function getStoredToken(): string | null {
   }
 }
 
+/** Read the stored refresh token from localStorage (browser only). */
+function getStoredRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("news-scraper-auth");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { state?: { refresh_token?: string } };
+    return parsed?.state?.refresh_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Attempt a silent token refresh. Returns the new access token or null. */
+async function silentRefresh(): Promise<string | null> {
+  const refresh_token = getStoredRefreshToken();
+  if (!refresh_token) return null;
+  try {
+    const res = await fetch(`${BASE}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { access_token: string; refresh_token: string };
+    // Patch localStorage directly so Zustand picks it up on next read
+    const raw = localStorage.getItem("news-scraper-auth");
+    if (raw) {
+      const parsed = JSON.parse(raw) as { state?: Record<string, unknown> };
+      if (parsed.state) {
+        parsed.state.token = data.access_token;
+        parsed.state.refresh_token = data.refresh_token;
+        localStorage.setItem("news-scraper-auth", JSON.stringify(parsed));
+      }
+    }
+    return data.access_token;
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getStoredToken();
   const authHeader: Record<string, string> = token
@@ -50,6 +91,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
     ...init,
   });
+
+  // On 401, attempt a silent token refresh and retry once
+  if (res.status === 401) {
+    const newToken = await silentRefresh();
+    if (newToken) {
+      const retryRes = await fetch(`${BASE}${path}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${newToken}`,
+          ...init?.headers,
+        },
+        ...init,
+      });
+      if (!retryRes.ok) {
+        const text = await retryRes.text().catch(() => retryRes.statusText);
+        throw new ApiError(retryRes.status, text);
+      }
+      if (retryRes.status === 204) return undefined as T;
+      return retryRes.json() as Promise<T>;
+    }
+    // Refresh failed — clear auth and redirect to login
+    localStorage.removeItem("news-scraper-auth");
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new ApiError(401, "Session expired. Please log in again.");
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);

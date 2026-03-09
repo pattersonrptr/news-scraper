@@ -18,9 +18,11 @@ export interface AuthUser {
 interface AuthState {
   /** JWT access token or null when not authenticated. */
   token: string | null;
+  /** JWT refresh token or null when not authenticated. */
+  refresh_token: string | null;
   user: AuthUser | null;
   /** Store the token + user after a successful login/register. */
-  setAuth: (token: string, user: AuthUser) => void;
+  setAuth: (token: string, refresh_token: string, user: AuthUser) => void;
   /** Clear all auth state (logout). */
   clearAuth: () => void;
 }
@@ -29,14 +31,14 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       token: null,
+      refresh_token: null,
       user: null,
-      setAuth: (token, user) => set({ token, user }),
-      clearAuth: () => set({ token: null, user: null }),
+      setAuth: (token, refresh_token, user) => set({ token, refresh_token, user }),
+      clearAuth: () => set({ token: null, refresh_token: null, user: null }),
     }),
     {
       name: "news-scraper-auth", // localStorage key
-      // Only persist the token — re-fetch user from /auth/me on hydration
-      partialize: (state) => ({ token: state.token, user: state.user }),
+      partialize: (state) => ({ token: state.token, refresh_token: state.refresh_token, user: state.user }),
     },
   ),
 );
