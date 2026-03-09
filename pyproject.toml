@@ -8,6 +8,7 @@ packages = [{include = "src", from = "backend"}]
 
 [tool.poetry.scripts]
 seed-sources = "backend.src.interfaces.cli.seed_sources:main"
+manage = "backend.src.interfaces.cli.manage:main"
 
 [tool.poetry.dependencies]
 python = "^3.12"
