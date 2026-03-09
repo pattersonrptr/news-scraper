@@ -42,6 +42,9 @@ domain → use_cases → interfaces (FastAPI/CLI/Celery)
 - **Docker stack**: 8 services — `db` (PostgreSQL, port 5434), `redis` (port 6380), `backend`, `celery_worker`, `celery_beat`, `flower` (port 5555), `frontend` (port 3000). Migrations and seed run automatically via `entrypoint.sh`.
 - **Ollama in Docker**: Ollama runs on the host machine. Containers reach it via `host.docker.internal:11434`. Requires `OLLAMA_HOST=0.0.0.0` in the systemd service override (`/etc/systemd/system/ollama.service.d/override.conf`) so it listens on all interfaces, not just `127.0.0.1`.
 - **AI pipeline per-article commit**: `RunAIPipelineUseCase.execute()` accepts an optional `commit_fn` so the Celery task can commit after each article, making progress visible in real time.
+- **Alert keyword monitoring vs. alert log**: The `alerts` DB table is a **history log** of fired notifications. The keyword watch rules are stored on the user profile (`users.alert_keywords`), managed via `PUT /profile/interests`. The frontend `POST /alerts` currently writes to the log, not the profile — this is a known UX gap tracked in Phase 10.
+- **`send_alerts` task reads from DB**: All three background tasks (`send_alerts`, `send_daily_digest`, `update_implicit_weights`) now use `SQLUserRepository` to load the real user profile. The old `InMemoryUserProfileRepository` stub has been replaced. `SQLUserRepository.get_default()` fetches the first active user.
+- **Top Keywords filtering**: `ComputeTrendsUseCase` uses an expanded stopword list covering both English and Portuguese (pt-BR) functional words. Minimum word length is 4 characters. Keywords are extracted from both `title` and `summary` fields.
 
 ## Code Style
 

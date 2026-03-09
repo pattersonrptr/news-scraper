@@ -157,6 +157,35 @@
 
 ---
 
+## Phase 10 — UX Polish & Missing Features (Backlog)
+
+Issues found during manual testing on 2026-03-08:
+
+### Sources page
+- [ ] Add delete confirmation dialog before removing a source (currently deletes immediately)
+- [ ] Show success/error toast after delete action
+- [ ] Allow editing an existing source (name, feed URL, fetch interval, active/inactive toggle)
+- [ ] Show source `is_active` status visually; allow toggling it from the list
+
+### Alerts page
+- [ ] Add delete confirmation dialog before removing an alert
+- [ ] Show success/error toast after create/delete
+- [ ] Redesign: the current "New Alert" form logs a historical alert entry (`POST /alerts`), but keyword monitoring rules live in `PUT /profile/interests → alert_keywords`. The UI must manage keywords on the profile, not the alert log. Consider splitting into two sections: "Active keyword watches" (profile) and "Alert history" (log).
+
+### Profile / Interests page
+- [ ] Implicit interests (`implicit_weights`) do not visually update after marking articles as read. Investigate: `PATCH /articles/{id}/read` must increment `implicit_weights` for the article's category. The `update_implicit_weights` daily task recalculates decay — check if the read event actually updates the DB on the spot.
+- [ ] Display `implicit_weights` as a ranked list or chart so the user can see the effect of their reading habits.
+
+### Email / SMTP
+- [ ] Configure SMTP (or add Mailhog to docker-compose for local dev) so email alerts and daily digest can be tested end-to-end without external credentials.
+- [ ] Add `SMTP_*` variables to `.env.example` with comments explaining how to obtain Gmail App Passwords or use Mailhog.
+
+### General
+- [ ] Global toast/notification system (success / error) — currently most actions give no feedback except console logs.
+- [ ] Loading skeletons on feed and sources pages to improve perceived performance.
+
+---
+
 ## Maintenance (Ongoing)
 
 - [ ] Review and update `docs/SPEC.md` before each commit
