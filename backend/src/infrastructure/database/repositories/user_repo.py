@@ -125,6 +125,18 @@ class SQLUserRepository:
         model = result.scalar_one_or_none()
         return _model_to_entity(model) if model else None
 
+    async def get_default(self) -> UserProfile | None:
+        """Return the first active user — used by single-user tasks (alerts, digest).
+
+        Replaces InMemoryUserProfileRepository.get_default() so that tasks
+        read real alert_keywords / notification_email from the database.
+        """
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.is_active.is_(True)).limit(1)
+        )
+        model = result.scalar_one_or_none()
+        return _model_to_entity(model) if model else None
+
     # ------------------------------------------------------------------
     # Compatibility helpers for old InMemoryUserProfileRepository callers
     # ------------------------------------------------------------------

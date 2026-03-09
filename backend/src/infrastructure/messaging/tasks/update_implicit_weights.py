@@ -40,12 +40,12 @@ async def _run_update() -> dict[str, Any]:
     """Wire dependencies and execute UpdateImplicitWeightsUseCase."""
     from backend.src.infrastructure.database.engine import get_session
     from backend.src.infrastructure.database.repositories.article_repo import SQLArticleRepository
-    from backend.src.infrastructure.database.repositories.user_profile_repo import InMemoryUserProfileRepository
+    from backend.src.infrastructure.database.repositories.user_repo import SQLUserRepository
     from backend.src.use_cases.update_implicit_weights import UpdateImplicitWeightsUseCase
 
     async with get_session() as session:
         use_case = UpdateImplicitWeightsUseCase(
             article_repo=SQLArticleRepository(session),
-            profile_repo=InMemoryUserProfileRepository(),
+            profile_repo=SQLUserRepository(session),
         )
         return await use_case.execute()

@@ -39,24 +39,23 @@ async def _run_digest() -> dict[str, Any]:
     """Wire dependencies and send the digest."""
     from backend.src.infrastructure.database.engine import get_session
     from backend.src.infrastructure.database.repositories.article_repo import SQLArticleRepository
-    from backend.src.infrastructure.database.repositories.user_profile_repo import InMemoryUserProfileRepository
+    from backend.src.infrastructure.database.repositories.user_repo import SQLUserRepository
     from backend.src.infrastructure.notifications.email.smtp_adapter import SMTPEmailAdapter
     from backend.src.use_cases.compile_digest import CompileDigestUseCase
 
     email_adapter = SMTPEmailAdapter()
-    profile_repo = InMemoryUserProfileRepository()
-
-    profile = await profile_repo.get_default()
-    if not profile:
-        log.warning("send_daily_digest: no profile found, skipping")
-        return {"total_articles": 0, "sent": False}
-
-    recipient = profile.notification_email or profile.email
-    if not recipient:
-        log.warning("send_daily_digest: no recipient email, skipping")
-        return {"total_articles": 0, "sent": False}
 
     async with get_session() as session:
+        profile = await SQLUserRepository(session).get_default()
+        if not profile:
+            log.warning("send_daily_digest: no profile found, skipping")
+            return {"total_articles": 0, "sent": False}
+
+        recipient = profile.notification_email or profile.email
+        if not recipient:
+            log.warning("send_daily_digest: no recipient email, skipping")
+            return {"total_articles": 0, "sent": False}
+
         use_case = CompileDigestUseCase(
             article_repo=SQLArticleRepository(session),
             hours=24,

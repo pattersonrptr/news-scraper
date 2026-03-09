@@ -41,7 +41,7 @@ async def _run_alerts() -> dict[str, Any]:
     from backend.src.infrastructure.database.engine import get_session
     from backend.src.infrastructure.database.repositories.alert_repo import SQLAlertRepository
     from backend.src.infrastructure.database.repositories.article_repo import SQLArticleRepository
-    from backend.src.infrastructure.database.repositories.user_profile_repo import InMemoryUserProfileRepository
+    from backend.src.infrastructure.database.repositories.user_repo import SQLUserRepository
     from backend.src.infrastructure.notifications.email.smtp_adapter import SMTPEmailAdapter
     from backend.src.use_cases.send_alerts import SendAlertsUseCase
 
@@ -49,7 +49,7 @@ async def _run_alerts() -> dict[str, Any]:
         use_case = SendAlertsUseCase(
             article_repo=SQLArticleRepository(session),
             alert_repo=SQLAlertRepository(session),
-            profile_repo=InMemoryUserProfileRepository(),
+            profile_repo=SQLUserRepository(session),
             email_adapter=SMTPEmailAdapter(),
         )
         return await use_case.execute()
