@@ -41,27 +41,6 @@ DEFAULT_SOURCES: list[dict[str, str]] = [
         "category": "Tech",
     },
     {
-        "name": "TechCrunch",
-        "url": "https://techcrunch.com",
-        "feed_url": "https://techcrunch.com/feed/",
-        "language": "en",
-        "category": "Tech",
-    },
-    {
-        "name": "BBC News World",
-        "url": "https://www.bbc.com/news/world",
-        "feed_url": "http://feeds.bbci.co.uk/news/world/rss.xml",
-        "language": "en",
-        "category": "World",
-    },
-    {
-        "name": "G1 Tecnologia",
-        "url": "https://g1.globo.com/tecnologia/",
-        "feed_url": "https://g1.globo.com/rss/g1/tecnologia/",
-        "language": "pt-BR",
-        "category": "Tech",
-    },
-    {
         "name": "InfoMoney",
         "url": "https://www.infomoney.com.br",
         "feed_url": "https://www.infomoney.com.br/feed/",
