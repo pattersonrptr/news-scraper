@@ -93,6 +93,7 @@ export const ProfileSchema = z.object({
   id: z.string().uuid(),
   explicit_interests: z.array(z.string()),
   implicit_weights: z.record(z.number()),
+  alert_keywords: z.array(z.string()).default([]),
   preferred_language: z.string().nullable().optional(),
   digest_enabled: z.boolean().optional(),
   digest_hour: z.number().int().optional(),
@@ -102,8 +103,13 @@ export const ProfileUpdateSchema = z.object({
   explicit_interests: z.array(z.string()),
 });
 
+export const KeywordsUpdateSchema = z.object({
+  keyword: z.string().min(1, "Keyword is required").max(100).trim(),
+});
+
 export type Profile = z.infer<typeof ProfileSchema>;
 export type ProfileUpdate = z.infer<typeof ProfileUpdateSchema>;
+export type KeywordsUpdate = z.infer<typeof KeywordsUpdateSchema>;
 
 // ---------------------------------------------------------------------------
 // Alert

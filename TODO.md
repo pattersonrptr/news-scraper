@@ -168,9 +168,9 @@ Issues found during manual testing on 2026-03-08:
 - [x] Show source `is_active` status visually; allow toggling it from the list
 
 ### Alerts page
-- [ ] Add delete confirmation dialog before removing an alert
-- [ ] Show success/error toast after create/delete
-- [ ] Redesign: the current "New Alert" form logs a historical alert entry (`POST /alerts`), but keyword monitoring rules live in `PUT /profile/interests → alert_keywords`. The UI must manage keywords on the profile, not the alert log. Consider splitting into two sections: "Active keyword watches" (profile) and "Alert history" (log).
+- [x] Add delete confirmation dialog before removing an alert
+- [x] Show success/error toast after create/delete
+- [x] Redesign: the current "New Alert" form logged a historical alert entry (`POST /alerts`), but keyword monitoring rules live in `PUT /profile/interests → alert_keywords`. The UI now manages keywords on the profile and displays the alert log separately — two distinct sections: "Active keyword watches" and "Alert history".
 
 ### Profile / Interests page
 - [ ] Implicit interests (`implicit_weights`) do not visually update after marking articles as read. Investigate: `PATCH /articles/{id}/read` must increment `implicit_weights` for the article's category. The `update_implicit_weights` daily task recalculates decay — check if the read event actually updates the DB on the spot.
