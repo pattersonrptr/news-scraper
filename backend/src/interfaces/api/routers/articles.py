@@ -6,7 +6,11 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from backend.src.interfaces.api.dependencies import get_article_repo
+from backend.src.interfaces.api.dependencies import (
+    get_article_repo,
+    get_current_user,
+    get_user_repo,
+)
 from backend.src.interfaces.api.schemas.article import (
     ArticleResponse,
     ArticleSummaryResponse,
@@ -15,8 +19,15 @@ from backend.src.interfaces.api.schemas.common import PaginatedResponse
 from backend.src.infrastructure.database.repositories.article_repo import (
     SQLArticleRepository,
 )
+from backend.src.infrastructure.database.repositories.user_repo import (
+    SQLUserRepository,
+)
+from backend.src.domain.entities.user_profile import UserProfile
 
 router = APIRouter(prefix="/articles", tags=["articles"])
+
+# Weight increment applied to a category each time the user reads an article.
+_READ_WEIGHT_INCREMENT = 0.05
 
 
 @router.get("", response_model=PaginatedResponse[ArticleSummaryResponse])
@@ -71,9 +82,19 @@ async def get_article(
 async def mark_article_read(
     article_id: uuid.UUID,
     repo: SQLArticleRepository = Depends(get_article_repo),
+    current_user: UserProfile = Depends(get_current_user),
+    user_repo: SQLUserRepository = Depends(get_user_repo),
 ) -> None:
-    """Mark an article as read."""
+    """Mark an article as read and immediately increment the user's implicit weight
+    for that article's category by _READ_WEIGHT_INCREMENT.
+    """
     article = await repo.get_by_id(article_id)
     if article is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found")
     await repo.mark_as_read(article_id)
+    if article.category:
+        await user_repo.increment_implicit_weight(
+            user_id=current_user.id,
+            category=article.category,
+            increment=_READ_WEIGHT_INCREMENT,
+        )

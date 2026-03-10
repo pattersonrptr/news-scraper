@@ -173,8 +173,8 @@ Issues found during manual testing on 2026-03-08:
 - [x] Redesign: the current "New Alert" form logged a historical alert entry (`POST /alerts`), but keyword monitoring rules live in `PUT /profile/interests → alert_keywords`. The UI now manages keywords on the profile and displays the alert log separately — two distinct sections: "Active keyword watches" and "Alert history".
 
 ### Profile / Interests page
-- [ ] Implicit interests (`implicit_weights`) do not visually update after marking articles as read. Investigate: `PATCH /articles/{id}/read` must increment `implicit_weights` for the article's category. The `update_implicit_weights` daily task recalculates decay — check if the read event actually updates the DB on the spot.
-- [ ] Display `implicit_weights` as a ranked list or chart so the user can see the effect of their reading habits.
+- [x] Implicit interests (`implicit_weights`) do not visually update after marking articles as read. **Fixed**: `PATCH /articles/{id}/read` now calls `user_repo.increment_implicit_weight(category, +0.05)` immediately; `useMarkRead` invalidates the `["profile"]` query so the chart refreshes in real time.
+- [x] Display `implicit_weights` as a ranked list or chart so the user can see the effect of their reading habits. **Done**: bars are now relative to the top category (not absolute %), colour-coded by category, with decimal weight values; empty state explains how to populate it.
 
 ### Email / SMTP
 - [ ] Configure SMTP (or add Mailhog to docker-compose for local dev) so email alerts and daily digest can be tested end-to-end without external credentials.

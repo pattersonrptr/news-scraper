@@ -60,6 +60,9 @@ export function useMarkRead() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ["articles"] });
       qc.invalidateQueries({ queryKey: ["article", id] });
+      // Backend now increments implicit_weights on read — refresh profile so
+      // the Profile page chart updates without a manual reload.
+      qc.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 }
