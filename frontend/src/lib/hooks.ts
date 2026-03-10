@@ -21,6 +21,7 @@ import {
   DigestPreviewSchema,
   ProfileSchema,
   ProfileUpdateSchema,
+  KeywordsUpdateSchema,
   SourceCreateSchema,
   SourceSchema,
   SourceUpdateSchema,
@@ -133,6 +134,15 @@ export function useUpdateProfile() {
     mutationFn: (interests: string[]) => profileApi.updateInterests(interests),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
     meta: { schema: ProfileUpdateSchema },
+  });
+}
+
+export function useUpdateKeywords() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (keywords: string[]) => profileApi.updateKeywords(keywords),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+    meta: { schema: KeywordsUpdateSchema },
   });
 }
 
