@@ -177,8 +177,8 @@ Issues found during manual testing on 2026-03-08:
 - [x] Display `implicit_weights` as a ranked list or chart so the user can see the effect of their reading habits. **Done**: bars are now relative to the top category (not absolute %), colour-coded by category, with decimal weight values; empty state explains how to populate it.
 
 ### Email / SMTP
-- [ ] Configure SMTP (or add Mailhog to docker-compose for local dev) so email alerts and daily digest can be tested end-to-end without external credentials.
-- [ ] Add `SMTP_*` variables to `.env.example` with comments explaining how to obtain Gmail App Passwords or use Mailhog.
+- [x] Configure SMTP (or add Mailhog to docker-compose for local dev) so email alerts and daily digest can be tested end-to-end without external credentials. **Done**: `mailhog/mailhog:v1.0.1` service added to `docker-compose.yml` (SMTP on port 1025, web UI on port 8025); `backend` and `celery_worker` automatically point to it via `SMTP_HOST=mailhog`.
+- [x] Add `SMTP_*` variables to `.env.example` with comments explaining how to obtain Gmail App Passwords or use Mailhog. **Done**: `.env.example` now has two clearly commented options — Option A (Mailhog, default) and Option B (Gmail with App Password instructions).
 
 ### General
 - [x] Global toast/notification system (success / error) — `sonner` `<Toaster>` added to `(main)/layout.tsx`; all source mutations show success/error toasts.
