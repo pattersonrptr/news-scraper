@@ -93,6 +93,12 @@ docker compose exec backend python -m backend.src.interfaces.cli.manage compute-
 
 > **Port mapping:** PostgreSQL is exposed on `5434` (not 5432) and Redis on `6380` (not 6379) to avoid conflicts with local installs.
 
+> **After adding new npm packages:** The frontend container uses an anonymous Docker volume to hold `node_modules`. If you add a package to `frontend/package.json` and rebuild the image, you must recreate the anonymous volume so the container picks up the new packages:
+> ```bash
+> docker compose down --volumes   # removes anonymous volumes; named volumes (db, redis) are preserved
+> docker compose up -d
+> ```
+
 ---
 
 ## Local Development (without Docker)

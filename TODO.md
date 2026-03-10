@@ -181,7 +181,7 @@ Issues found during manual testing on 2026-03-08:
 - [ ] Add `SMTP_*` variables to `.env.example` with comments explaining how to obtain Gmail App Passwords or use Mailhog.
 
 ### General
-- [ ] Global toast/notification system (success / error) — currently most actions give no feedback except console logs.
+- [x] Global toast/notification system (success / error) — `sonner` `<Toaster>` added to `(main)/layout.tsx`; all source mutations show success/error toasts.
 - [ ] Loading skeletons on feed and sources pages to improve perceived performance.
 
 ---
@@ -193,3 +193,4 @@ Issues found during manual testing on 2026-03-08:
 - [ ] Keep `CHANGELOG.md` updated (Conventional Commits)
 - [ ] Monitor Gemini free tier usage
 - [ ] Review and rotate API keys periodically
+- [x] **Docker node_modules volume fix** — anonymous volume `/app/node_modules` in `docker-compose.yml` can become stale after new npm packages are added. Fix: run `docker compose down --volumes` (preserves named volumes for db/redis/celery) then `docker compose up -d` to recreate the anonymous volume from the updated image. See ADR-012.
