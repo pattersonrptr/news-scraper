@@ -167,11 +167,16 @@ export const sourcesApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  update: (id: string, body: unknown) =>
+    request<unknown>(`/sources/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
   delete: (id: string) =>
     request<void>(`/sources/${id}`, { method: "DELETE" }),
   toggle: (id: string, is_active: boolean) =>
     request<unknown>(`/sources/${id}`, {
-      method: "PATCH",
+      method: "PUT",
       body: JSON.stringify({ is_active }),
     }),
 };

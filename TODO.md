@@ -162,10 +162,10 @@
 Issues found during manual testing on 2026-03-08:
 
 ### Sources page
-- [ ] Add delete confirmation dialog before removing a source (currently deletes immediately)
-- [ ] Show success/error toast after delete action
-- [ ] Allow editing an existing source (name, feed URL, fetch interval, active/inactive toggle)
-- [ ] Show source `is_active` status visually; allow toggling it from the list
+- [x] Add delete confirmation dialog before removing a source (currently deletes immediately)
+- [x] Show success/error toast after delete action
+- [x] Allow editing an existing source (name, feed URL, fetch interval, active/inactive toggle)
+- [x] Show source `is_active` status visually; allow toggling it from the list
 
 ### Alerts page
 - [ ] Add delete confirmation dialog before removing an alert
