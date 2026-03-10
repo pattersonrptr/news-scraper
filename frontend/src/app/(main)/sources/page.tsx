@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -168,6 +169,26 @@ function DeleteDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Skeleton row — mirrors the real row layout while data is loading
+// ---------------------------------------------------------------------------
+function SourceRowSkeleton() {
+  return (
+    <tr>
+      <td className="px-4 py-3"><Skeleton className="h-4 w-36" /></td>
+      <td className="px-4 py-3"><Skeleton className="h-4 w-10" /></td>
+      <td className="px-4 py-3"><Skeleton className="h-4 w-8" /></td>
+      <td className="px-4 py-3"><Skeleton className="h-5 w-16 rounded-full" /></td>
+      <td className="px-4 py-3 text-right">
+        <div className="flex justify-end gap-1">
+          <Skeleton className="h-8 w-8 rounded-md" />
+          <Skeleton className="h-8 w-8 rounded-md" />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 export default function SourcesPage() {
@@ -269,8 +290,6 @@ export default function SourcesPage() {
         </form>
       )}
 
-      {isLoading && <p className="text-muted-foreground">Loading…</p>}
-
       {/* Sources table */}
       <div className="overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
@@ -284,7 +303,9 @@ export default function SourcesPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {sources?.map((s) =>
+            {isLoading
+              ? Array.from({ length: 5 }).map((_, i) => <SourceRowSkeleton key={i} />)
+              : sources?.map((s) =>
               editingId === s.id ? (
                 <EditRow key={s.id} source={s} onDone={() => setEditingId(null)} />
               ) : (

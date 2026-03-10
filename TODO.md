@@ -182,7 +182,7 @@ Issues found during manual testing on 2026-03-08:
 
 ### General
 - [x] Global toast/notification system (success / error) — `sonner` `<Toaster>` added to `(main)/layout.tsx`; all source mutations show success/error toasts.
-- [ ] Loading skeletons on feed and sources pages to improve perceived performance.
+- [x] Loading skeletons on feed and sources pages to improve perceived performance. **Done**: `Skeleton` base component at `components/ui/skeleton.tsx`; feed page shows 8 `ArticleCardSkeleton` cards in the same 3-column grid; sources page shows 5 `SourceRowSkeleton` rows matching all table columns.
 
 ---
 
