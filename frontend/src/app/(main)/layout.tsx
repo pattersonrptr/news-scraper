@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/sidebar";
 import ProtectedRoute from "@/components/protected-route";
+import { Toaster } from "sonner";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 overflow-y-auto p-4 pb-16 md:p-6 md:pb-6">{children}</main>
         </div>
       </div>
+      <Toaster richColors position="bottom-right" />
     </ProtectedRoute>
   );
 }

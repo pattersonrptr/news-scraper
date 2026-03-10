@@ -72,8 +72,18 @@ export const SourceCreateSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
+export const SourceUpdateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  url: z.string().url().optional(),
+  feed_url: z.string().url().optional(),
+  language: z.string().min(2).max(10).optional(),
+  fetch_interval: z.number().int().min(1).optional(),
+  is_active: z.boolean().optional(),
+});
+
 export type Source = z.infer<typeof SourceSchema>;
 export type SourceCreate = z.infer<typeof SourceCreateSchema>;
+export type SourceUpdate = z.infer<typeof SourceUpdateSchema>;
 
 // ---------------------------------------------------------------------------
 // Profile

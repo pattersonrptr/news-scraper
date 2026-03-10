@@ -23,6 +23,7 @@ import {
   ProfileUpdateSchema,
   SourceCreateSchema,
   SourceSchema,
+  SourceUpdateSchema,
   TrendsSchema,
 } from "@/lib/schemas";
 
@@ -82,6 +83,16 @@ export function useCreateSource() {
     mutationFn: (body: unknown) => sourcesApi.create(body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sources"] }),
     meta: { schema: SourceCreateSchema },
+  });
+}
+
+export function useUpdateSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: unknown }) =>
+      sourcesApi.update(id, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sources"] }),
+    meta: { schema: SourceUpdateSchema },
   });
 }
 

@@ -277,3 +277,49 @@ Each handler follows the same pattern:
 - The `seed` command re-uses the existing `_seed()` coroutine from `seed_sources.py` via `asyncio.run()`, keeping a single source of truth for seed logic.
 - Error handling: `KeyboardInterrupt` prints `⚠  Interrupted.`; all other exceptions print `✖  Error: <msg>` and exit with code 1.
 
+
+---
+
+# ADR-012: Docker Frontend — Anonymous Volume for node_modules
+
+**Date:** 2026-03-09
+**Status:** Accepted
+
+## Context
+
+The frontend service in `docker-compose.yml` uses a bind mount to enable hot reload during development:
+
+```yaml
+volumes:
+  - ./frontend:/app        # bind mount: host code → container
+  - /app/node_modules      # anonymous volume: shields node_modules from bind mount
+  - /app/.next             # anonymous volume: shields build cache from bind mount
+```
+
+Without the anonymous volume for `node_modules`, the host directory `frontend/node_modules` (which may be absent or contain platform-incompatible binaries) would overwrite the `node_modules` installed inside the container image by `npm ci`.
+
+## Problem Discovered
+
+Anonymous Docker volumes are created once and persist across container restarts and rebuilds. When new npm packages are added to `package.json` and the image is rebuilt with `docker compose build`, the updated `node_modules` layer exists inside the new image. However, when the container starts, Docker mounts the **existing** anonymous volume (with the old `node_modules`) on top of the image layer — hiding the newly installed packages.
+
+This caused `Module not found: Can't resolve 'sonner'` even though `sonner` was correctly listed in `package.json`, `package-lock.json`, and installed in the image layer.
+
+## Decision
+
+Accept the anonymous volume pattern (it is the standard Docker approach for Node.js development containers). Document the required maintenance step when new packages are added.
+
+## Required Step After Adding npm Packages
+
+```bash
+# Destroy anonymous volumes (named volumes are preserved) and recreate
+docker compose down --volumes
+docker compose up -d
+```
+
+`docker compose down --volumes` removes only the **anonymous** volumes associated with each service (in this case `/app/node_modules` and `/app/.next`). The named volumes (`postgres_data`, `redis_data`, `celerybeat_data`) declared in the top-level `volumes:` block are **not** removed.
+
+## Alternative Considered
+
+Using `npm install` directly inside the running container via `docker compose exec frontend npm install` — rejected because it doesn't persist across rebuilds and introduces drift between image and runtime state.
+
+````
