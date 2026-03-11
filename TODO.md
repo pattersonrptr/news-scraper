@@ -173,16 +173,16 @@ Issues found during manual testing on 2026-03-08:
 - [x] Redesign: the current "New Alert" form logged a historical alert entry (`POST /alerts`), but keyword monitoring rules live in `PUT /profile/interests → alert_keywords`. The UI now manages keywords on the profile and displays the alert log separately — two distinct sections: "Active keyword watches" and "Alert history".
 
 ### Profile / Interests page
-- [ ] Implicit interests (`implicit_weights`) do not visually update after marking articles as read. Investigate: `PATCH /articles/{id}/read` must increment `implicit_weights` for the article's category. The `update_implicit_weights` daily task recalculates decay — check if the read event actually updates the DB on the spot.
-- [ ] Display `implicit_weights` as a ranked list or chart so the user can see the effect of their reading habits.
+- [x] Implicit interests (`implicit_weights`) do not visually update after marking articles as read. **Fixed**: `PATCH /articles/{id}/read` now calls `user_repo.increment_implicit_weight(category, +0.05)` immediately; `useMarkRead` invalidates the `["profile"]` query so the chart refreshes in real time.
+- [x] Display `implicit_weights` as a ranked list or chart so the user can see the effect of their reading habits. **Done**: bars are now relative to the top category (not absolute %), colour-coded by category, with decimal weight values; empty state explains how to populate it.
 
 ### Email / SMTP
-- [ ] Configure SMTP (or add Mailhog to docker-compose for local dev) so email alerts and daily digest can be tested end-to-end without external credentials.
-- [ ] Add `SMTP_*` variables to `.env.example` with comments explaining how to obtain Gmail App Passwords or use Mailhog.
+- [x] Configure SMTP (or add Mailhog to docker-compose for local dev) so email alerts and daily digest can be tested end-to-end without external credentials. **Done**: `mailhog/mailhog:v1.0.1` service added to `docker-compose.yml` (SMTP on port 1025, web UI on port 8025); `backend` and `celery_worker` automatically point to it via `SMTP_HOST=mailhog`.
+- [x] Add `SMTP_*` variables to `.env.example` with comments explaining how to obtain Gmail App Passwords or use Mailhog. **Done**: `.env.example` now has two clearly commented options — Option A (Mailhog, default) and Option B (Gmail with App Password instructions).
 
 ### General
 - [x] Global toast/notification system (success / error) — `sonner` `<Toaster>` added to `(main)/layout.tsx`; all source mutations show success/error toasts.
-- [ ] Loading skeletons on feed and sources pages to improve perceived performance.
+- [x] Loading skeletons on feed and sources pages to improve perceived performance. **Done**: `Skeleton` base component at `components/ui/skeleton.tsx`; feed page shows 8 `ArticleCardSkeleton` cards in the same 3-column grid; sources page shows 5 `SourceRowSkeleton` rows matching all table columns.
 
 ---
 

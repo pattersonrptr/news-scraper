@@ -95,7 +95,7 @@ class SQLUserRepository:
     async def update_implicit_weights(
         self, user_id: uuid.UUID, weights: dict[str, float]
     ) -> None:
-        """Merge new weights into the user's implicit_weights map."""
+        """Merge new weights into the user's implicit_weights map (overwrites existing keys)."""
         result = await self._session.execute(
             select(UserModel).where(UserModel.id == user_id)
         )
@@ -104,6 +104,25 @@ class SQLUserRepository:
             return
         current: dict[str, float] = json.loads(model.implicit_weights)
         current.update(weights)
+        model.implicit_weights = json.dumps(current)
+        await self._session.flush()
+
+    async def increment_implicit_weight(
+        self, user_id: uuid.UUID, category: str, increment: float = 0.05
+    ) -> None:
+        """Add `increment` to the user's implicit weight for `category`.
+
+        Creates the category entry if it does not yet exist.
+        Caps individual category weights at 1.0 to avoid unbounded growth.
+        """
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.id == user_id)
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            return
+        current: dict[str, float] = json.loads(model.implicit_weights)
+        current[category] = min(1.0, current.get(category, 0.0) + increment)
         model.implicit_weights = json.dumps(current)
         await self._session.flush()
 

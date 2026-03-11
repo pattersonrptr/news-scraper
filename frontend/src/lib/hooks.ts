@@ -22,6 +22,7 @@ import {
   ProfileSchema,
   ProfileUpdateSchema,
   KeywordsUpdateSchema,
+  NotificationEmailUpdateSchema,
   SourceCreateSchema,
   SourceSchema,
   SourceUpdateSchema,
@@ -60,6 +61,9 @@ export function useMarkRead() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ["articles"] });
       qc.invalidateQueries({ queryKey: ["article", id] });
+      // Backend now increments implicit_weights on read — refresh profile so
+      // the Profile page chart updates without a manual reload.
+      qc.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 }
@@ -143,6 +147,15 @@ export function useUpdateKeywords() {
     mutationFn: (keywords: string[]) => profileApi.updateKeywords(keywords),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
     meta: { schema: KeywordsUpdateSchema },
+  });
+}
+
+export function useUpdateNotificationEmail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (email: string) => profileApi.updateNotificationEmail(email),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+    meta: { schema: NotificationEmailUpdateSchema },
   });
 }
 

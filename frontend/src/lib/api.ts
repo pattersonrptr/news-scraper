@@ -197,6 +197,11 @@ export const profileApi = {
       method: "PUT",
       body: JSON.stringify({ alert_keywords: keywords }),
     }),
+  updateNotificationEmail: (email: string) =>
+    request<unknown>("/profile/interests", {
+      method: "PUT",
+      body: JSON.stringify({ notification_email: email }),
+    }),
 };
 
 // ---------------------------------------------------------------------------
