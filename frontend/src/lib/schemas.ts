@@ -94,6 +94,7 @@ export const ProfileSchema = z.object({
   explicit_interests: z.array(z.string()),
   implicit_weights: z.record(z.number()),
   alert_keywords: z.array(z.string()).default([]),
+  notification_email: z.string().default(""),
   preferred_language: z.string().nullable().optional(),
   digest_enabled: z.boolean().optional(),
   digest_hour: z.number().int().optional(),
@@ -107,9 +108,18 @@ export const KeywordsUpdateSchema = z.object({
   keyword: z.string().min(1, "Keyword is required").max(100).trim(),
 });
 
+export const NotificationEmailUpdateSchema = z.object({
+  notification_email: z
+    .string()
+    .email("Enter a valid email address")
+    .or(z.literal(""))
+    .optional(),
+});
+
 export type Profile = z.infer<typeof ProfileSchema>;
 export type ProfileUpdate = z.infer<typeof ProfileUpdateSchema>;
 export type KeywordsUpdate = z.infer<typeof KeywordsUpdateSchema>;
+export type NotificationEmailUpdate = z.infer<typeof NotificationEmailUpdateSchema>;
 
 // ---------------------------------------------------------------------------
 // Alert

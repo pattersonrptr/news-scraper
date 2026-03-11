@@ -22,6 +22,7 @@ import {
   ProfileSchema,
   ProfileUpdateSchema,
   KeywordsUpdateSchema,
+  NotificationEmailUpdateSchema,
   SourceCreateSchema,
   SourceSchema,
   SourceUpdateSchema,
@@ -146,6 +147,15 @@ export function useUpdateKeywords() {
     mutationFn: (keywords: string[]) => profileApi.updateKeywords(keywords),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
     meta: { schema: KeywordsUpdateSchema },
+  });
+}
+
+export function useUpdateNotificationEmail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (email: string) => profileApi.updateNotificationEmail(email),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+    meta: { schema: NotificationEmailUpdateSchema },
   });
 }
 

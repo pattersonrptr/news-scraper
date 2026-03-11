@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useProfile, useUpdateProfile } from "@/lib/hooks";
+import { useProfile, useUpdateProfile, useUpdateNotificationEmail } from "@/lib/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { X, Plus, BookOpen, TrendingUp, Info } from "lucide-react";
+import { X, Plus, BookOpen, TrendingUp, Info, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 // Colour palette cycled by index for category badges
@@ -24,7 +24,9 @@ const CATEGORY_COLOURS = [
 export default function ProfilePage() {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+  const updateNotificationEmail = useUpdateNotificationEmail();
   const [newInterest, setNewInterest] = useState("");
+  const [notifEmail, setNotifEmail] = useState<string | null>(null);
 
   const interests = profile?.explicit_interests ?? [];
 
@@ -65,6 +67,23 @@ export default function ProfilePage() {
     ([, a], [, b]) => b - a,
   );
   const maxWeight = implicitEntries.length > 0 ? implicitEntries[0][1] : 1;
+
+  // Notification email — use local state once the user starts editing,
+  // otherwise fall back to what the profile returns.
+  const currentNotifEmail = notifEmail ?? (profile?.notification_email ?? "");
+
+  const saveNotificationEmail = async () => {
+    try {
+      await updateNotificationEmail.mutateAsync(currentNotifEmail);
+      toast.success(
+        currentNotifEmail
+          ? `Alert emails will be sent to ${currentNotifEmail}.`
+          : "Notification email cleared.",
+      );
+    } catch {
+      toast.error("Failed to save notification email. Please try again.");
+    }
+  };
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
 
@@ -178,6 +197,42 @@ export default function ProfilePage() {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+      {/* ------------------------------------------------------------------ */}
+      {/* Notification email                                                  */}
+      {/* ------------------------------------------------------------------ */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-muted-foreground" />
+            <CardTitle>Notification Email</CardTitle>
+          </div>
+          <CardDescription>
+            Email address where keyword alerts and the daily digest will be sent.
+            Leave blank to disable email notifications.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 max-w-sm">
+            <Input
+              type="email"
+              value={currentNotifEmail}
+              onChange={(e) => setNotifEmail(e.target.value)}
+              placeholder="you@example.com"
+              disabled={updateNotificationEmail.isPending}
+            />
+            <Button
+              size="sm"
+              onClick={saveNotificationEmail}
+              disabled={
+                updateNotificationEmail.isPending ||
+                currentNotifEmail === (profile?.notification_email ?? "")
+              }
+            >
+              Save
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
